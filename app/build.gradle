@@ -1,0 +1,45 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 34
+    buildToolsVersion "30.0.3"
+    ndkVersion '21.3.6528147'
+    defaultConfig {
+        applicationId "org.xvisio.xslam"
+        minSdkVersion 25
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            manifestPlaceholders = [:]
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    packagingOptions {
+        doNotStrip '*/armeabi-v7a/*.so'
+        doNotStrip '*/arm64-v8a/*.so'
+    }
+}
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    implementation (name:'aitalk-release',ext:'aar')
+    implementation project(':xvsdk')
+    implementation project(':asrsdk')
+    // implementation 'com.github.getActivity:XXPermissions:15.0'
+}

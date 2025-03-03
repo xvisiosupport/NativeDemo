@@ -1,0 +1,13 @@
+local.properties
+.idea
+.vs
+.gradle/
+.cxx
+bak/
+build/
+release/
+*.iml
+/xvsdk/src/main/cpp/third-party/hid_sdk/include/
+/xvsdk/src/main/cpp/third-party/uvc_sdk/include/
+/xvsdk/src/main/cpp/third-party/vsc_sdk/include/
+/xvsdk/src/main/cpp/third-party/boost/

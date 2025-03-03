@@ -1,0 +1,1 @@
+修改asrsdk下so和java文件，assemble asrsdk生成aar文件放在unity plugin/Android目录下 即可生效
