@@ -1378,6 +1378,35 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
 
     }
     /**
+ * @brief 读取红外标定参数。
+ *
+ */
+    bool xv_read_thermal_calibration(){
+        if (!device) {
+            return false;
+        }
+        /**
+         * @brief 红外相机标定扩展结构体
+         *
+         * 该结构体继承自 `Calibration`，用于表示热成像相机的标定数据扩展。它包含多个摄像机模型参数的集合，用于不同的相机分辨率。
+         *
+         * @note
+         * - `seucm`：表示不同摄像头分辨率下的特殊统一相机模型参数，适用于热成像相机的标定。
+         */
+        std::vector<xv::CalibrationEx> m_Calibration;
+        m_Calibration = reinterpret_cast<xv::ThermalCameraEX*>(device->thermalCamera().get())->calibrationEx();
+        if (m_Calibration.size() > 0 ){
+            LOG_DEBUG("IrTrackingCameraEX m_Calibration[0].pdcm.size() = %d,w = %d",
+                      m_Calibration[0].pdcm.size(),
+                      m_Calibration[0].pdcm[0].w);
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    /**
      * @brief IMU/导航相机标定读取接口
      *
      * @return bool 返回操作是否成功。如果设备无效或获取标定数据失败，返回 `false`；否则返回 `true`。

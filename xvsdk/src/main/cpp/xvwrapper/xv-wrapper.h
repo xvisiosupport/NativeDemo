@@ -74,6 +74,7 @@ extern "C" {
         EXPORT_API void xv_stop_RGB_R_thermalFusionCamera(int id);
         EXPORT_API int xv_start_colorCamera2();
         EXPORT_API int xv_start_thermalCamera();
+        EXPORT_API bool xv_read_thermal_calibration();
         EXPORT_API void xv_stop_colorCamera2(int id);
         EXPORT_API void xv_stop_thermalCamera(int id);
         EXPORT_API bool xv_switch_display_state(int eye_type, bool isOpen);
