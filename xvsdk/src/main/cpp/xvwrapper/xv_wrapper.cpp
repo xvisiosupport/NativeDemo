@@ -175,8 +175,8 @@ namespace XvWrapper {
                 std::memcpy(calib->extrinsic.translation,
                             &((xv::Vector3d) display->calibration()[i].pose.translation())[0],
                             sizeof(xv::Vector3d));
-                LOG_DEBUG("xv#wrapper xv_readDisplayCalibration K[0] = %f,K[1] = %f", calib->intrinsic.K[0], calib->intrinsic.K[1]);
-                LOG_DEBUG("xv#wrapper xv_readDisplayCalibration T%d:%lf,%lf,%lf", calib->extrinsic.translation[0], calib->extrinsic.translation[1],
+                LOG_DEBUG("xv#wrapper xv_readDisplayCalibration index is %d K[0] = %f,K[1] = %f",i, calib->intrinsic.K[0], calib->intrinsic.K[1]);
+                LOG_DEBUG("xv#wrapper xv_readDisplayCalibration  index is %d  T%d:%lf,%lf,%lf", i,calib->extrinsic.translation[0], calib->extrinsic.translation[1],
                           calib->extrinsic.translation[2]);
             }
 

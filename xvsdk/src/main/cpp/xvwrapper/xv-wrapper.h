@@ -48,6 +48,8 @@ extern "C" {
         EXPORT_API void startTofStream();
         EXPORT_API bool setPmdTofIRFunction();
         EXPORT_API int xv_start_skeleton_ex_with_cb();
+        EXPORT_API bool xv_readDisplayCalibration(pdm_calibration *calib);
+        EXPORT_API bool xvReadStereoFisheyesCalibration();
         EXPORT_API bool xvReadStereoFisheyesCalibration();
         EXPORT_API int start_et_gaze_callback();
         EXPORT_API void xv_controller_register();
