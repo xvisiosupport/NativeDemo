@@ -145,7 +145,46 @@ namespace XvWrapper {
 
     }
 
+/**
+ * @brief 读取显示器的标定信息。
+ *
+ * 该函数读取设备的显示器标定信息，并将标定结果保存到 calib 结构体中。
+ *
+ * @param calib 存储显示器标定信息的结构体
+ * @return bool 标定是否成功
+ */
+    bool xv_readDisplayCalibration(pdm_calibration *calib) {
+        auto display = device->display();
+        if (display) {
+            for (int i = 0; i < 2; i++) {
+                calib->intrinsic.K[0] = display->calibration()[i].pdcm[0].fx;
+                calib->intrinsic.K[1] = display->calibration()[i].pdcm[0].fy;
+                calib->intrinsic.K[2] = display->calibration()[i].pdcm[0].u0;
+                calib->intrinsic.K[3] = display->calibration()[i].pdcm[0].v0;
+                calib->intrinsic.K[4] = display->calibration()[i].pdcm[0].distor[0];
+                calib->intrinsic.K[5] = display->calibration()[i].pdcm[0].distor[1];
+                calib->intrinsic.K[6] = display->calibration()[i].pdcm[0].distor[2];
+                calib->intrinsic.K[7] = display->calibration()[i].pdcm[0].distor[3];
+                calib->intrinsic.K[8] = display->calibration()[i].pdcm[0].distor[4];
+                calib->intrinsic.K[9] = display->calibration()[i].pdcm[0].w;
+                calib->intrinsic.K[10] = display->calibration()[i].pdcm[0].h;
 
+                std::memcpy(calib->extrinsic.rotation,
+                            &((xv::Matrix3d) display->calibration()[i].pose.rotation())[0],
+                            sizeof(xv::Matrix3d));
+                std::memcpy(calib->extrinsic.translation,
+                            &((xv::Vector3d) display->calibration()[i].pose.translation())[0],
+                            sizeof(xv::Vector3d));
+                LOG_DEBUG("xv#wrapper xv_readDisplayCalibration K[0] = %f,K[1] = %f", calib->intrinsic.K[0], calib->intrinsic.K[1]);
+                LOG_DEBUG("xv#wrapper xv_readDisplayCalibration T%d:%lf,%lf,%lf", calib->extrinsic.translation[0], calib->extrinsic.translation[1],
+                          calib->extrinsic.translation[2]);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
     /**
      * @brief rgb callback 默认格式为YUYV
      */
