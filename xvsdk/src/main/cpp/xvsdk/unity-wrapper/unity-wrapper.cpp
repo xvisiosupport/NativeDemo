@@ -3696,7 +3696,8 @@ void convertDepthToRGBAWithGamma(const unsigned short* tmp_d, int width, int hei
             return false;
         }
     }
-    bool xslam_start_light_preception(){
+    bool
+    xslam_start_light_preception(){
         if(device){
             std::vector<unsigned char> write;
             std::vector<unsigned char> vecRead;

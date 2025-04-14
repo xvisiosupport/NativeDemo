@@ -88,8 +88,10 @@ extern "C" {
         EXPORT_API bool xv_set_ir_tracking_camera_led_time(int ledIndex,float time);
         EXPORT_API bool xv_set_ir_tracking_exposureTime(int time);
         EXPORT_API int xv_start_irTrackingCamera();
+        EXPORT_API int xv_stop_irTrackingCamera();
         EXPORT_API bool xv_save_ir_tracking_image();
         EXPORT_API int xv_start_irTrackingCamera2();
+        EXPORT_API int xv_stop_irTrackingCamera2();
         EXPORT_API void xv_get_irTrackingCamera_params();
         EXPORT_API float xv_getCPUTemperature();
         EXPORT_API void xv_register_device_status_callback();

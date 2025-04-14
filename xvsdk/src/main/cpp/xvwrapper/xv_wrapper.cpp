@@ -46,6 +46,7 @@ static int rgbId = -1;
 static int rgb2Id = -1;
 static int thermalId = -1;
 static int irTrackingId = -1;
+static int irTrackingId2 = -1;
 static int tofId = -1;
 static int rgbLThermalFusionCallbackID = -1;
 static int rgbRThermalFusionCallbackID = -1;
@@ -466,6 +467,7 @@ namespace XvWrapper {
             LOG_DEBUG("xv#wrapper irTrackingCamera callback w = %d", w);
         });
         device->irTrackingCamera()->start();
+
         return irTrackingId;
     }
     /**
@@ -473,7 +475,7 @@ namespace XvWrapper {
     */
 
     int xv_start_irTrackingCamera2() {
-        irTrackingId = device->irTrackingCamera()->registerCamera2Callback([](xv::IrTrackingImage const &image) {
+        irTrackingId2 = device->irTrackingCamera()->registerCamera2Callback([](xv::IrTrackingImage const &image) {
             int w = image.width;
             int h = image.height;
             auto d = image.data.get();
@@ -489,9 +491,16 @@ namespace XvWrapper {
             }*/
             LOG_DEBUG("xv#wrapper irTrackingCamera callback w = %d", w);
         });
-        device->irTrackingCamera()->startCamera2();
-        return irTrackingId;
+
+
+        return irTrackingId2;
     }
+    void xv_stop_irTrackingCamera2() {
+        LOG_DEBUG("xv#wrapper xv_stop_thermalCamera");
+        device->irTrackingCamera()->unregisterCamera2Callback(irTrackingId2);
+        device->irTrackingCamera()->stopCamera2();
+    }
+
     /**
    * @brief 开启K1红外参数
    */
@@ -1225,6 +1234,7 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
                 auto d = rgb.data.get();
                 LOG_DEBUG("xv#wrapper RGB_L_ThermalFusionCamera callback w = %d", w);
             });
+
         } else {
             LOG_DEBUG("xv#wrapper xv_start_RGB_L_ThermalFusionCamera deviceEx is null");
             return -1;
