@@ -73,6 +73,9 @@ static xv::TerrestrialMagnetismData s_stmData;
 static std::shared_ptr<xv::Imu> s_imu;
 static std::mutex s_tofIRImageMtx;
 static std::shared_ptr<const xv::GrayScaleImage> s_ir;
+// 用于存储上次回调时间和帧计数
+static std::atomic<int> frame_count(0);
+static std::chrono::steady_clock::time_point last_time = std::chrono::steady_clock::now();
 namespace XvWrapper {
     bool xv_test() {
         LOG_DEBUG("xv_test start");
@@ -438,7 +441,26 @@ namespace XvWrapper {
             int w = image.width;
             int h = image.height;
             auto d = image.data.get();
+    // 增加帧计数
+            frame_count++;
 
+            // 获取当前时间
+            auto current_time = std::chrono::steady_clock::now();
+
+            // 计算时间差（以秒为单位）
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_time).count();
+            double seconds = duration / 1e6;
+
+            // 每秒更新一次帧率
+            static double fps = 0.0;
+            if (seconds >= 1.0) { // 每秒计算一次
+                fps = frame_count / seconds;
+                LOG_DEBUG("xv#wrapper irTrackingCamera callback w = %d, FPS = %.2f", w, fps);
+
+                // 重置计数和时间
+                frame_count = 0;
+                last_time = current_time;
+            }
             // 示例：使用一个 YUYV 图片
          /*   if(frame_count++%10 == 0){
 //                int *rgb_image = new int[w * h];  // 32-bit color per pixel (ARGB)
@@ -495,10 +517,10 @@ namespace XvWrapper {
 
         return irTrackingId2;
     }
-    void xv_stop_irTrackingCamera2() {
+    bool xv_stop_irTrackingCamera2() {
         LOG_DEBUG("xv#wrapper xv_stop_thermalCamera");
         device->irTrackingCamera()->unregisterCamera2Callback(irTrackingId2);
-        device->irTrackingCamera()->stopCamera2();
+        return device->irTrackingCamera()->stopCamera2();
     }
 
     /**
