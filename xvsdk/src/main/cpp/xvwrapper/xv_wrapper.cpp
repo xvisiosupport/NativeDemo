@@ -27,6 +27,8 @@
 #include "fps_count.hpp"
 #include "xv-wrapper.h"
 #include <opencv2/opencv.hpp>
+#include <dirent.h>
+
 #define LOG_TAG "xv#wrapper"
 #define LOG_DEBUG(...)                                                \
     do                                                                \
@@ -42,6 +44,7 @@
 
 #define PI acos(-1)
 using namespace UnityWrapper;
+
 static int rgbId = -1;
 static int rgb2Id = -1;
 static int thermalId = -1;
@@ -568,19 +571,19 @@ namespace XvWrapper {
     /**
     * @brief 关闭红外数据流
     */
-    void xv_stop_thermalCamera() {
+    bool xv_stop_thermalCamera() {
         LOG_DEBUG("xv#wrapper xv_stop_thermalCamera");
         device->thermalCamera()->unregisterCallback(thermalId);
-        device->thermalCamera()->stop();
+        return device->thermalCamera()->stop();
     }
 
     /**
   * @brief 关闭红外数据流
   */
-    void xv_stop_irTrackingCamera() {
+    bool xv_stop_irTrackingCamera() {
         LOG_DEBUG("xv#wrapper xv_stop_thermalCamera");
         device->irTrackingCamera()->unregisterCallback(irTrackingId);
-        device->irTrackingCamera()->stop();
+        return  device->irTrackingCamera()->stop();
     }
     /**
      * @brief Exposure setting.
@@ -1595,33 +1598,33 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
      * @return 返回cpu温度 单位摄氏度
 
      */
+
     float xv_getCPUTemperature() {
-        std::vector<std::string> thermalPaths = {
-                "/sys/class/thermal/thermal_zone0/temp",
-                "/sys/class/thermal/thermal_zone1/temp",
-                "/sys/class/thermal/thermal_zone2/temp"
-        };
+        const std::string base_path = "/sys/class/thermal/";
+        DIR* dir = opendir(base_path.c_str());
+        if (!dir) return -1.0f;
 
-        for (const auto& path : thermalPaths) {
-            std::ifstream file(path);
-            if (file.is_open()) {
-                std::string line;
-                std::getline(file, line);
-                file.close();
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            if (strncmp(entry->d_name, "thermal_zone", 12) != 0) continue;
 
-                try {
-                    float temp = std::stof(line) / 1000.0f; // 转换为摄氏度
-                    if (temp > 0) {
-                        LOG_DEBUG("eddy gen2 cpu_temp = %d", temp);
-                        return temp;
+            std::string zone_path = base_path + entry->d_name;
+            std::ifstream type_file(zone_path + "/type");
+            std::string type;
+            if (type_file && std::getline(type_file, type)) {
+                if (type.find("cpu") != std::string::npos) {
+                    std::ifstream temp_file(zone_path + "/temp");
+                    int temp_millicelsius = 0;
+                    if (temp_file && (temp_file >> temp_millicelsius)) {
+                        closedir(dir);
+                        return temp_millicelsius / 1000.0f;
                     }
-                } catch (...) {
-                    // 解析错误时跳过
-                    continue;
                 }
             }
         }
-        return -1.0f; // 无法获取温度
+
+        closedir(dir);
+        return -1.0f;
     }
 }
 //被动调用 用于环境初始化
