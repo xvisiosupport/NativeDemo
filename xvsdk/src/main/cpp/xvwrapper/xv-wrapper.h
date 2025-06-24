@@ -95,6 +95,9 @@ extern "C" {
         EXPORT_API void xv_get_irTrackingCamera_params();
         EXPORT_API float xv_getCPUTemperature();
         EXPORT_API void xv_register_device_status_callback();
+        EXPORT_API int xv_callAdjustVolume(int direction, int type);
+        EXPORT_API void xv_play_music( const std::string& filePath);
+        EXPORT_API void xv_stopAudio();
     }
 }
 

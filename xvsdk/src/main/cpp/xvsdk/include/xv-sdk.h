@@ -343,6 +343,10 @@ public:
     */
     virtual void setFilterFile(std::string filePath) = 0;
 
+    virtual void enableIrGamma(bool enable) = 0;
+
+    virtual bool isEnableIrGamma() = 0;
+
     virtual ~TofCamera() {}
 };
 

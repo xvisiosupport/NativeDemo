@@ -1139,14 +1139,14 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
  *
    * @return int 调整后的音量级别，如果方法或类未初始化则返回 -1
    */
-    int xv_callAdjustVolume(int streamType, int direction) {
+    int xv_callAdjustVolume(int direction, int streamType) {
         if (!s_adjustVolumeMethod || !s_XvInterfaceClass) {
             printf("Method or class not initialized\n");
             return -1;
         }
         JNIEnv *jniEnv;
         jvm->AttachCurrentThread(&jniEnv, NULL);
-        return jniEnv->CallStaticIntMethod(s_XvInterfaceClass, s_adjustVolumeMethod, streamType, direction);
+        return jniEnv->CallStaticIntMethod(s_XvInterfaceClass, s_adjustVolumeMethod, direction, streamType);
     }
     void xv_play_music( const std::string& filePath){
         JNIEnv *env;
@@ -1162,7 +1162,7 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
 
     }
     // 调用 stopAudio 方法
-    void stopAudio() {
+    void xv_stopAudio() {
         JNIEnv *env;
         jvm->AttachCurrentThread(&env, NULL);
         // 调用静态方法 stopAudio
@@ -1646,7 +1646,7 @@ Java_com_xv_aitalk_XvInterface_doInitEnv(JNIEnv *env, jclass clazz) {
     // 获取 adjustVolume 方法 ID
     s_adjustVolumeMethod = env->GetStaticMethodID(s_XvInterfaceClass, "adjustVolume", "(II)I");
     // 获取静态方法 playAudio
-    s_playAudioMethod = env->GetStaticMethodID(s_XvInterfaceClass, "playAudio", "(Ljava/lang/String;)V");
+    s_playAudioMethod = env->GetStaticMethodID(s_XvInterfaceClass, "playAudioFromSdCard", "(Ljava/lang/String;)V");
     // 获取静态方法 stopAudio
     s_stopAudioMethod = env->GetStaticMethodID(s_XvInterfaceClass, "stopAudio", "()V");
 
