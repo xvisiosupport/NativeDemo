@@ -1663,8 +1663,15 @@ struct GazeConfigs
 {
     int screenWidth;
     int screenHeight;
+    int etWidth;
+    int etHeight;
     float ipdDist;
     int srValue;
+    int loplength;
+    float etFoclen;
+    float etOccupy;
+    float ftFoclen;
+    int hiValue;
 };
 
 struct ResolutionParam

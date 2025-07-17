@@ -506,6 +506,12 @@ public:
      * @brief Reset the 6dof pose coordinate (SLAM)
      */
     virtual void poseReset() = 0;
+
+    /**
+     * @brief set slam mode
+     * @param mode 0 for 6dof, 1 for 3dof
+     */
+    virtual void poseSetMode(int mode) = 0;
 	
 	virtual int registerSharedMapCallback(std::function<void (std::vector<uint8_t> const&)> cb) = 0;
     
@@ -707,6 +713,36 @@ public:
      * @brief enable dump eyetracking files.
      */
     virtual void enableDump(bool enable) = 0;
+
+     /**
+     * @brief set to pref data to gaze.
+     */
+    virtual int setPref(int et_idx, uint8_t *data, int size ) = 0;
+
+     /**
+     * @brief get pref data and save.
+     */
+    virtual int getPref(int et_idx, uint8_t *data, int *size ) = 0;
+
+    /**
+     * @brief get hi value.
+     */
+    virtual int getHiValue() = 0;
+
+     /**
+     * @brief get sr value.
+     */
+    virtual int getSrValue() = 0;
+
+    /**
+     * @brief get eye center 3D position in et camera CS, in unit of mm
+     */
+    virtual int getOeValue(int et_idx, float *oe_v, int cs) = 0;
+
+    /**
+     * @brief get eye center 3D position in world CS
+     */
+    virtual int getEyeValue(int et_idx, float *eye_v, int cs) = 0;
 
     virtual ~GazeStream() {}
 };
