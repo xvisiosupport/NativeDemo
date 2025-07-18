@@ -1441,15 +1441,28 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
      *
      */
     void xv_read_eyetracking_calibrate(){
-        std::vector<xv::Calibration> calibrations =  device->eyetracking()->calibration();
-        if(calibrations.size() > 0){
-
-            LOG_DEBUG("eyetracking m_Calibration[0].fx= %f,fy = %f",
-                      calibrations.at(0).ucm[0].fx,
-                      calibrations.at(0).ucm[0].fy);
+        if (!device) {
+            LOG_ERROR("device is nullptr!");
+            return;
         }
 
+        auto eyetracking = device->eyetracking();
+        if (!eyetracking) {
+            LOG_ERROR("device->eyetracking() is nullptr!");
+            return;
+        }
 
+        std::vector<xv::Calibration> calibrations = eyetracking->calibration();
+        if (calibrations.size() == 2) {
+            LOG_DEBUG("eyetracking m_Calibration[0].pose.x= %f, pose.y = %f",
+                      (float )calibrations[0].pose.x()*1000,
+                      (float ) calibrations[0].pose.y()*1000);
+            LOG_DEBUG("eyetracking m_Calibration[1].pose.x= %f, pose.y = %f",
+                      (float )calibrations[1].pose.x()*1000,
+                      (float )calibrations[1].pose.y()*1000);
+        } else {
+            LOG_DEBUG("Calibration list is empty!");
+        }
     }
     /**
  * @brief 读取红外标定参数。
