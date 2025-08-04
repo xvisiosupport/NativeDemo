@@ -93,6 +93,7 @@ extern "C" {
         EXPORT_API int xv_start_irTrackingCamera2();
         EXPORT_API bool xv_stop_irTrackingCamera2();
         EXPORT_API void xv_get_irTrackingCamera_params();
+        EXPORT_API int xv_get_glass_temperature();
         EXPORT_API float xv_getCPUTemperature();
         EXPORT_API void xv_register_device_status_callback();
         EXPORT_API int xv_callAdjustVolume(int direction, int type);

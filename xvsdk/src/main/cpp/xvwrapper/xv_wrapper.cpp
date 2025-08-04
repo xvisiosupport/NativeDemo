@@ -69,6 +69,7 @@ static jmethodID s_getVolumeMaxMethod = nullptr;
 static jmethodID s_adjustVolumeMethod = nullptr;
 static jmethodID s_playAudioMethod = nullptr;
 static jmethodID s_stopAudioMethod = nullptr;
+
 int STMDataId = -1;
 static std::mutex g_stm_mutex;
 static std::shared_ptr<xv::TerrestrialMagnetismData> g_stmData = nullptr;
@@ -1579,9 +1580,16 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
         * @brief 获取头盔温度 单位摄氏度
         *
         */
+    int xv_get_glass_temperature(){
+        if (device && device->deviceStatus()) {
+            return xv_get_glass_tem();
+        } else
+            return -1;
+    }
     void xv_register_device_status_callback() {
 
         if (device && device->deviceStatus()) {
+
 #ifdef ANDROID
             LOG_DEBUG( "eddy xslam_register_device_status_callback entry");
 #endif
@@ -1601,10 +1609,12 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
                     }
                     LOG_DEBUG("eddy cpu_temp = %d", (int)deviceStatus[17]);
                 }
+                LOG_DEBUG("eddy deviceStatus size is = %d",deviceStatus.size());
 
             });
         }
     }
+
     /**
      * @brief 获取盒子cpu温度，需要系统权限应用
      *

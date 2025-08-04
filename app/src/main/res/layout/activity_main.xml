@@ -10,7 +10,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+        <FrameLayout
+            android:id="@+id/splash_layer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/background_dark">
+            <!--   <ImageView
+                   android:id="@+id/splash_anim_view"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:layout_gravity="center"
 
+                   android:src="@drawable/g2_load" />-->
+            <VideoView
+                android:id="@+id/videoView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true" />
+        </FrameLayout>
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cl_top"
             app:layout_constraintTop_toTopOf="parent"

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +19,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -72,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     Button mBtRgbSolution;
     Button mBtStartASR;
     ImageView mIvStream;
+    private VideoView videoView;
     ConstraintLayout mClTof;
     TextView mTvSolution, mTvFps,mTvResult;
     private StreamHandler mMainHandler;
@@ -94,7 +97,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mBtStartASR = findViewById(R.id.bt_startAsr);
+        videoView = findViewById(R.id.videoView);
 
+        Uri videoUri = Uri.parse("android.resource://" + mContext.getPackageName() + "/" + R.raw.hms);
+        videoView.setVideoURI(videoUri);
+
+        videoView.setOnCompletionListener(mp -> {
+            // 视频播放完毕后执行，比如跳转主页
+
+        });
+        videoView.start();
         RadioGroup radioSlam = findViewById(R.id.radio_slam_mode);
         modeSelect = radioSlam.getCheckedRadioButtonId();
         radioSlam.setOnCheckedChangeListener(mSlamModeListener);

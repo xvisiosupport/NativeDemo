@@ -91,7 +91,7 @@ static std::shared_ptr<const xv::SlamMap> slamMap = nullptr;
 static std::mutex s_tofPlaneMutex;
 static int s_tofPlaneId = -1;
 static std::shared_ptr<const std::vector<xv::Plane>> s_tofPlane = nullptr;
-
+static std::vector<unsigned char>  g_deviceStatus;
 static std::mutex s_stereoPlaneMutex;
 static int s_stereoPlaneId = -1;
 static std::shared_ptr<const std::vector<xv::Plane>> s_stereoPlane = nullptr;
@@ -3770,6 +3770,14 @@ void convertDepthToRGBAWithGamma(const unsigned short* tmp_d, int width, int hei
                 }
 
             });
+        } else {
+            return -1;
+        }
+    }
+    int xv_get_glass_tem(){
+        if(g_deviceStatus.size()>0){
+            LOG_DEBUG(ANDROID_LOG_INFO,"xvxr","eddy xv_get_glass_tem = %d", (int)g_deviceStatus[17]);
+            return  (int)g_deviceStatus[17];
         } else {
             return -1;
         }

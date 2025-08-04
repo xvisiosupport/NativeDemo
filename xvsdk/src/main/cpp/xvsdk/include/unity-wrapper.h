@@ -774,7 +774,7 @@ extern "C"
         EXPORT_API bool xslam_stop_light_preception();
         // device status
         EXPORT_API int xslam_register_device_status_callback(device_status_callback cb);
-
+        EXPORT_API int xv_get_glass_tem();
         EXPORT_API void xslam_set_device_status_callback(device_status_callback_ex cb);
 
         // Configuration
