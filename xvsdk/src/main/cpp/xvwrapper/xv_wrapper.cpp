@@ -88,6 +88,7 @@ namespace XvWrapper {
 
     //获取xvisio眼镜设备指针
     void initXvDevice() {
+
         device = xslam_get_device();
     }
 
