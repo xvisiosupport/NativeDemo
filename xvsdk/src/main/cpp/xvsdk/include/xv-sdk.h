@@ -835,6 +835,7 @@ public:
     virtual ~GestureStream() {}
 
     virtual bool setPlatform( int platform , bool ego) = 0;
+    virtual bool setParams( int filter_level , bool easy_pinch) = 0;
 };
 
 /**

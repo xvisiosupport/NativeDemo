@@ -434,7 +434,6 @@ void onRgbCallback(xv::ColorImage const &rgb) {
 
 int xslam_tof_set_steam_mode(int cmd) {
     bool bOk = false;
-    __android_log_print(ANDROID_LOG_WARN, "xvxr", "xslam_tof_set_steam_mode = %d",cmd);
     if (device->tofCamera()) {
         switch (cmd) {
             case 0:
@@ -728,8 +727,6 @@ void startTofStream() {
                                            xv::TofCamera::Resolution::VGA,
                                            xv::TofCamera::Framerate::FPS_30);
     device->tofCamera()->start();
-
-
 }
 
 void onStrereoCallback(xv::FisheyeImages const &stereo) {
@@ -860,8 +857,153 @@ void startSgbmStream() {
     device->sgbmCamera()->start(sgbm_config);
 }
 
+void check_and_set_pref()
+{
+    const char *calibrationFilePath = "/data/misc/xr/CaliData.dat";
+//    const char *calibrationFilePath = "/sdcard/CaliData.dat";
+    FILE *fp = fopen(calibrationFilePath, "rb");
+    LOG_DEBUG(
+            "eddy xslam_set_pref 0");
+    if (fp == NULL) {
+        // 文件不存在
+        LOG_DEBUG("fopen failed: %s", strerror(errno));
+        return;
+    }
+
+    // 获取文件大小
+    fseek(fp, 0, SEEK_END);
+    long filesize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    LOG_DEBUG(
+            "eddy xslam_set_pref 1");
+    if (filesize <= 0) {
+        // 文件为空
+        fclose(fp);
+        return;
+    }
+    LOG_DEBUG(
+            "eddy xslam_set_pref 2");
+    // 读取文件内容到字节数组
+    unsigned char *data = (unsigned char *)malloc(filesize);
+    if (data == NULL) {
+        fclose(fp);
+        return;
+    }
+    LOG_DEBUG(
+            "eddy xslam_set_pref 3");
+    size_t read_size = fread(data, 1, filesize, fp);
+    fclose(fp);
+
+    if (filesize <= 4) {
+        LOG_DEBUG("文件太小，不包含有效数据");
+        fclose(fp);
+        free(data);
+        return;
+    }
+
+// 读取长度信息
+    int dataLength = 0;
+    memcpy(&dataLength, data, 4); // 前4字节是长度
+    LOG_DEBUG("dataLength = %d", dataLength);
+
+// 跳过前4字节，把真正的数据传给 xslam_set_pref
+    int ret = UnityWrapper::xslam_set_pref(-1, data + 4, dataLength);
+    LOG_DEBUG("eddy xslam_set_pref res = %d", ret);
+    free(data);
+}
+
+void gazeCallback(xv::XV_ET_EYE_DATA_EX const &eyedata) {
+
+#ifdef ANDROID
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.timestamp = %lld", eyedata.timestamp);
+    LOG_DEBUG(  "eddy gazeCallback eyedata.recommend = %d",
+              eyedata.recommend);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.recomGaze.gazePoint.x = %f，y = %f,z = %f",
+              eyedata.recomGaze.gazePoint.x, eyedata.recomGaze.gazePoint.y,
+              eyedata.recomGaze.gazePoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.recomGaze.rawPoint.x = %f，y = %f,z = %f",
+              eyedata.recomGaze.rawPoint.x, eyedata.recomGaze.rawPoint.y,
+              eyedata.recomGaze.rawPoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.recomGaze.smoothPoint.x = %f，y = %f,z = %f",
+              eyedata.recomGaze.smoothPoint.x, eyedata.recomGaze.smoothPoint.y,
+              eyedata.recomGaze.smoothPoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftGaze.gazePoint.x = %f，y = %f,z = %f",
+              eyedata.leftGaze.gazePoint.x, eyedata.leftGaze.gazePoint.y,
+              eyedata.leftGaze.gazePoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftGaze.rawPoint.x = %f，y = %f,z = %f",
+              eyedata.leftGaze.rawPoint.x, eyedata.leftGaze.rawPoint.y,
+              eyedata.leftGaze.rawPoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftGaze.smoothPoint.x = %f，y = %f,z = %f",
+              eyedata.leftGaze.smoothPoint.x, eyedata.leftGaze.smoothPoint.y,
+              eyedata.leftGaze.smoothPoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.gazePoint.x = %f，y = %f,z = %f",
+              eyedata.rightGaze.gazePoint.x, eyedata.rightGaze.gazePoint.y,
+              eyedata.rightGaze.gazePoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.rawPoint.x = %f，y = %f,z = %f",
+              eyedata.rightGaze.rawPoint.x, eyedata.rightGaze.rawPoint.y,
+              eyedata.rightGaze.rawPoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.smoothPoint.x = %f，y = %f,z = %f",
+              eyedata.rightGaze.smoothPoint.x, eyedata.rightGaze.smoothPoint.y,
+              eyedata.rightGaze.smoothPoint.z);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.smoothPoint.x = %f",
+              eyedata.rightGaze.smoothPoint.x);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.smoothPoint.y = %f",
+              eyedata.rightGaze.smoothPoint.y);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.exDataBitMask = %d",
+              eyedata.rightGaze.exDataBitMask);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.rawPoint.y = %f",
+              eyedata.rightGaze.rawPoint.y);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.rightGaze.gazeDirection.y = %f",
+              eyedata.leftGaze.gazeDirection.y);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftPupil.pupilBitMask = %d",
+              eyedata.leftPupil.pupilBitMask);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftPupil.pupilDistance = %f",
+              eyedata.leftPupil.pupilDistance);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftPupil.pupilCenter.x = %f",
+              eyedata.leftPupil.pupilCenter.x);
+    LOG_DEBUG( 
+              "eddy gazeCallback eyedata.leftPupil.pupilCenter.y = %f",
+              eyedata.leftPupil.pupilCenter.y);
+#endif
 
 
+}
+
+void startEyeTracking(){
+    int ret = 0;
+    UnityWrapper::xv_eyetracking_start();
+    UnityWrapper::xslam_gaze_set_config_path("/data/misc/xr/b50he.json");
+
+    UnityWrapper::xslam_set_gaze_configs(1920,1200,-1,1,400,400,8,270,0.4,2619,3);
+
+    UnityWrapper::xslam_start_gaze();
+    usleep(2000*1000);
+    int rets = 0;
+    UnityWrapper::xslam_set_exposure(30, 10, 30, 10);
+    UnityWrapper::xslam_set_bright(2, 8, 10);
+
+
+    device->gaze()->registerCallback(gazeCallback);
+    check_and_set_pref();
+}
 extern "C" JNIEXPORT void JNICALL
 Java_org_xvisio_xvsdk_XCamera_nAddUsbDevice(JNIEnv
                                             *env,
@@ -897,6 +1039,7 @@ Java_org_xvisio_xvsdk_XCamera_nAddUsbDevice(JNIEnv
         LOG_DEBUG("eddy nAddUsbDevice device version: %s", device->info().at("version").c_str());
         LOG_DEBUG("eddy nAddUsbDevice sdk version: %s", xv::Version().toString().c_str());
         testXvWrapper();
+     //   startEyeTracking();
     }
     LOG_DEBUG("nAddUsbDevice inited");
 }

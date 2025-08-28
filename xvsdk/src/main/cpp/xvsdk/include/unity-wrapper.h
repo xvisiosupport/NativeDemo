@@ -1,5 +1,3 @@
-#ifndef UNITY_WRAPPER_H
-#define UNITY_WRAPPER_H
 #pragma once
 
 #ifdef WIN32
@@ -10,7 +8,7 @@
 
 #include <string>
 #include <xv-types.h>
-#include "third-party/qvr/svrConfig.h"
+
 //#include "XvXR_Client_Base.h"
 #include <xv-sdk-ex.h>
 #include <xv-sdk.h>
@@ -34,8 +32,10 @@
 #define XV_GAZE_CALIB_NEW
 // #define XV_MULTY_DEVICE_RGB
 #define XV_IRIS
+//#define ZDK_IRIS
 #define ZHIYUAN_CAMERAS
 #define FE_RECTIFICATION
+#define XV_IRTRACK
 // #define FE_RECTIFICATION_SEUCM_UPDATE
 #ifdef FE_RECTIFICATION
 
@@ -303,7 +303,7 @@ struct Orientation
 /**
  * @brief Rotation and translation structure
  */
-struct transform
+struct xvtransform
 {
     double rotation[9];    //!< Rotation matrix (row major)
     double translation[3]; //!< Translation vector
@@ -381,7 +381,7 @@ servoing. Ph.D., University of Coimbra, 2003". Section 2.2.2.
 
 struct unified_calibration
 {
-    transform extrinsic;
+    xvtransform extrinsic;
     unified intrinsic;
 };
 
@@ -392,7 +392,7 @@ struct stereo_fisheyes
 
 struct pdm_calibration
 {
-    transform extrinsic;
+    xvtransform extrinsic;
     pdm intrinsic;
 };
 
@@ -403,7 +403,7 @@ struct stereo_pdm_calibration
 
 struct rgb_calibration
 {
-    transform extrinsic;
+    xvtransform extrinsic;
     pdm intrinsic1080; //!< 1920x1080
     pdm intrinsic720;  //!< 1280x720
     pdm intrinsic480;  //!< 640x480
@@ -527,6 +527,7 @@ struct GazeCalibStatus
     /** The status of API CalibrationReset */
     int reset_status;
 };
+typedef void (*TagArrayCallback)( TagArray* tagArray,int count);
 
 typedef void (*wireless_pose_callback)(ControllerPos *pose);
 
@@ -630,6 +631,8 @@ extern "C"
 
         EXPORT_API int xslam_get_login_open();
 
+        EXPORT_API int xslam_get_low_fps_mode();
+
         EXPORT_API void xslam_set_glass_ipd(int value, bool isroot);
 
         EXPORT_API int xslam_get_glass_ipd();
@@ -641,7 +644,8 @@ extern "C"
         EXPORT_API void xslam_set_glass_Light(int value, bool isroot);
 
         EXPORT_API int xslam_get_glass_Light();
-
+        EXPORT_API int xslam_get_rtsp_steamer_enable();
+        EXPORT_API void xslam_set_rtsp_steamer_enable(int value, bool isroot);
         EXPORT_API void xslam_set_box_channel(int value, bool isroot);
 
         EXPORT_API int xslam_get_box_channel();
@@ -670,7 +674,7 @@ extern "C"
 
         EXPORT_API bool
         xslam_get_pose_prediction(double *poseData, long long *timestamp, double predictionTime);
-
+        EXPORT_API void xslam_pose_set_mode(int mode);
         EXPORT_API bool xslam_get_pose_at(double *poseData, double timestamp);
 
         EXPORT_API bool xslam_get_pose_confidence(double *confidence);
@@ -738,7 +742,7 @@ extern "C"
         EXPORT_API int xslam_get_stereo_height();
         EXPORT_API void xslam_stereo_set_framerate(float framerate);
         EXPORT_API void xslam_stereo_set_exposure(int aecMode, int exposureGain, float exposureTimeMs);
-
+        EXPORT_API bool xslam_stereo_get_exposure(unsigned int* time,float* gain);
         EXPORT_API bool
         xslam_get_left_image(unsigned char *data, int width, int height, double *timestamp);
 
@@ -774,7 +778,7 @@ extern "C"
         EXPORT_API bool xslam_stop_light_preception();
         // device status
         EXPORT_API int xslam_register_device_status_callback(device_status_callback cb);
-        EXPORT_API int xv_get_glass_tem();
+
         EXPORT_API void xslam_set_device_status_callback(device_status_callback_ex cb);
 
         // Configuration
@@ -802,9 +806,11 @@ extern "C"
         EXPORT_API void xslam_stop_rgb_stream();
 
         EXPORT_API void xslam_start_tof_stream();
+        EXPORT_API void xslam_tof_enbale_ir_gramma(bool enable);
+        EXPORT_API bool xslam_tof_is_enbale_ir_gramma();
 
-        EXPORT_API void xslam_start_tofir_stream();
-
+        EXPORT_API void xslam_start_tofir_stream(int libmode,int resulution,int fps);
+        EXPORT_API void xslam_get_tofir_size(int *width,int *height);
         EXPORT_API bool xslam_get_tofir_image(unsigned char *data, int width, int height);
 
         EXPORT_API void xslam_start_sony_tof_stream(int libmode, int resulution, int fps);
@@ -863,7 +869,7 @@ extern "C"
 
         EXPORT_API int xslam_start_gesture_ex(const std::string &path);
 
-        EXPORT_API void xslam_stop_gesture();
+        EXPORT_API int xslam_stop_gesture();
 
         EXPORT_API int xslam_start_dynamic_gesture();
 
@@ -922,6 +928,8 @@ extern "C"
 
         EXPORT_API void xslam_set_gesture_ego(bool ego);
 
+        EXPORT_API void xslam_set_gesture_filter(int level,bool easy_pinch);
+
         EXPORT_API int xslam_start_skeleton_ex_with_cb(fn_skeleton_callback cb);
         // Audio
         EXPORT_API int xslam_transfer_speaker_buffer(const unsigned char *data, int len);
@@ -979,13 +987,12 @@ extern "C"
         // april tag
         EXPORT_API int
         xslam_start_detect_tags(const char *tagFamily, double size, TagArray *tagsArray, int arraySize);
-
+        EXPORT_API void xslam_getTagDetectionrgbImage(const char *tagFamily, double size,TagArrayCallback callback);
         EXPORT_API void xslam_stop_detect_tags();
         // rgb april tag
         EXPORT_API int
-        xslam_start_rgb_detect_tags(const char *tagFamily, double size, TagArray *tagsArray,
-                                    int arraySize);
-
+        xslam_start_rgb_detect_tags(const char *tagFamily, double size);
+        EXPORT_API  int xslam_get_rgb_detect_tags(TagArray *tagsArray, int arraySize);
         EXPORT_API void xslam_stop_rgb_detect_tags();
         // slam april tag
 
@@ -1060,17 +1067,17 @@ extern "C"
         //        EXPORT_API void xv_get_sn(std::string &sn);
         EXPORT_API void xv_get_fe_camera_intrinsics_param(int *trans_size, int *ucm_size);
 
-        EXPORT_API void xv_get_fe_camera_intrinsics(transform *trans, xv::UnifiedCameraModel *ucm);
+        EXPORT_API void xv_get_fe_camera_intrinsics(xvtransform *trans, xv::UnifiedCameraModel *ucm);
 
         EXPORT_API void xv_get_rgb_camera_intrinsics_param(int *trans_size, int *pdcm_size);
 
         EXPORT_API void
-        xv_get_rgb_camera_intrinsics(transform *trans, xv::PolynomialDistortionCameraModel *pdcm);
+        xv_get_rgb_camera_intrinsics(xvtransform *trans, xv::PolynomialDistortionCameraModel *pdcm);
 
         EXPORT_API void xv_get_tof_camera_intrinsics_param(int *trans_size, int *pdcm_size);
 
         EXPORT_API void
-        xv_get_tof_camera_intrinsics(transform *trans, xv::PolynomialDistortionCameraModel *pdcm);
+        xv_get_tof_camera_intrinsics(xvtransform *trans, xv::PolynomialDistortionCameraModel *pdcm);
 
         EXPORT_API void xv_set_rgb_camera_resolution(xv::ColorCamera::Resolution resolution);
 
@@ -1080,7 +1087,13 @@ extern "C"
 
         EXPORT_API void xv_get_fe_tag_detection(TagData *tags);
 
+        EXPORT_API int xv_get_glass_tem();
+
         EXPORT_API void xslam_display_set_brightnesslevel(int level);
+
+        EXPORT_API void xslam_rgb_set_exposure(int aecMode, int exposureGain, float exposureTimeMs);
+
+        EXPORT_API bool xslam_rgb_get_exposure(unsigned int* time,float* gain);
 
         EXPORT_API void xslam_rgb_set_brightness(int brightness);
 
@@ -1111,7 +1124,14 @@ extern "C"
         EXPORT_API bool xslam_get_gaze_status();
         EXPORT_API void xslam_gaze_enable_dump(bool enable);
         EXPORT_API void xslam_set_usr_eye_ready();
-        EXPORT_API  void xslam_set_gaze_configs(int width,int height,float ipdDist,int srValue/*,int etWidth,int etHeight*/) ;
+        EXPORT_API  void xslam_set_gaze_configs(int screenWidth, int screenHeight, float ipdDist, int srValue, int etWidth, int etHeight, int loplength, float etFoclen, float etOccupy, float ftFoclen, int hiValue);
+      
+       EXPORT_API int xslam_set_pref(int etIdx,unsigned char *data,int size);
+        EXPORT_API int xslam_get_pref(int etIdx,unsigned char *data,int *size);
+        EXPORT_API int xslam_getHiValue();
+        EXPORT_API int xslam_getSrValue();
+        EXPORT_API int xslam_get_oe_value(int etIdx,float *oe_v,int cs);
+        EXPORT_API int xslam_get_eye_value(int etIdx,float *eye_v, int cs);
         //  #ifndef __linux__
         EXPORT_API int xslam_start_gaze_calibration(int points);
 
@@ -1257,12 +1277,14 @@ extern "C"
         EXPORT_API void xslam_stop_RGB_R_thermalFusionCamera(int id);
         EXPORT_API int xslam_start_colorCamera2();
         EXPORT_API int xslam_start_thermalCamera();
-    EXPORT_API int xslam_start_irTrackingCamera();
+    EXPORT_API int xslam_start_irTrackingCamera(int index);
         EXPORT_API void xslam_stop_colorCamera2(int id);
         EXPORT_API void xslam_stop_thermalCamera(int id);
     EXPORT_API void xslam_stop_irTrackingCamera(int id);
-        EXPORT_API bool xslam_device_get_thermal(int width, int height, unsigned char *data);
-        EXPORT_API bool xslam_device_get_irTracking(int width, int height, unsigned char *data1);
+    EXPORT_API bool xslam_get_irTrackCamera_temperature(int* temperateOne,int* temperateTwo);
+    EXPORT_API bool xslam_device_get_thermal(int width, int height, unsigned char *data);
+        EXPORT_API bool xslam_device_get_irTracking(int width, int height, unsigned char *data1, double *timestamp);
+    EXPORT_API bool xslam_device_get_irTracking_camera2(int width, int height, unsigned char *data1, double *timestamp);
     //data1: rgb  data2: rgb2
         EXPORT_API bool xslam_device_get_rgba2(int width, int height, unsigned char *data2);
         EXPORT_API bool xslam_device_get_rgbfusitionCamera(int width, int height, unsigned char *rgbldata, unsigned char *rgbrdata);
@@ -1295,7 +1317,10 @@ extern "C"
         EXPORT_API int xslam_gaze_calibration_query_status(GazeCalibStatus *status);
 
 #endif
-
+#ifdef ZDK_IRIS
+        EXPORT_API bool registerIris(std::string& userId);
+        EXPORT_API std::string recognizeIris(double& confidence);
+#endif
 #ifdef XV_IRIS
 
         EXPORT_API void xv_iris_init(JNIEnv *env, jobject context, jstring initLicence);
@@ -1354,4 +1379,3 @@ extern "C"
 
     }
 }
-#endif
