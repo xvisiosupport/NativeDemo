@@ -744,6 +744,11 @@ public:
      */
     virtual int getEyeValue(int et_idx, float *eye_v, int cs) = 0;
 
+    /**
+     * @brief set gaze mode
+     */
+    virtual void setGazeMode(int mode) = 0;
+
     virtual ~GazeStream() {}
 };
 
@@ -835,6 +840,7 @@ public:
     virtual ~GestureStream() {}
 
     virtual bool setPlatform( int platform , bool ego) = 0;
+    virtual bool setParams( int filter_level , bool easy_pinch) = 0;
 };
 
 /**
