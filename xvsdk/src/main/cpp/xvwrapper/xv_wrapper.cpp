@@ -445,6 +445,7 @@ namespace XvWrapper {
         irTrackingId = device->irTrackingCamera()->registerCallback([](xv::IrTrackingImage const &image) {
             int w = image.width;
             int h = image.height;
+            long long timestamp = image.deviceTimestamp;
             auto d = image.data.get();
     // 增加帧计数
             frame_count++;
@@ -505,6 +506,7 @@ namespace XvWrapper {
         irTrackingId2 = device->irTrackingCamera()->registerCamera2Callback([](xv::IrTrackingImage const &image) {
             int w = image.width;
             int h = image.height;
+            long long timestamp = image.deviceTimestamp;
             auto d = image.data.get();
             s_irTrackingMutex.lock();
             s_IrTrackingImage = std::make_shared<xv::IrTrackingImage>(image);
