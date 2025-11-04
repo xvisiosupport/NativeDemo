@@ -1,9 +1,9 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace "org.xvisio.xvsdk"
     compileSdkVersion 34
-    buildToolsVersion "30.0.3"
-
+    buildToolsVersion "34.0.0"
 
     defaultConfig {
         minSdkVersion 25
