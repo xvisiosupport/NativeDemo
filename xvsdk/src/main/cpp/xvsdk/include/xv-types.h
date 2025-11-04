@@ -1657,6 +1657,8 @@ struct WirelessControllerDeviceInformation
 {
     uint8_t battery;            // 1 bytes
     uint8_t temp;               // 1 bytes
+    uint8_t sleep;
+    uint8_t charging;
 };
 
 struct GazeConfigs
