@@ -1702,4 +1702,34 @@ struct IrTrackingTemperature
     int two;
 };
 
+struct IRIS_PARAMS{
+    int eyes;
+    int quality;
+    int eye_expo;
+};
+
+struct CAM_CONFIG{
+    float focal_length;
+    float pixel_size;
+    float obj_distance;
+    int pupil_radius_min;
+    int pupil_radius_max;
+    int iris_radius_min;
+    int iris_radius_max;
+};
+
+struct GAZE_ANGLE{
+    float x_angle;
+    float y_angle;
+    float z_angle;
+};
+
+struct IrisConfig
+{
+    IRIS_PARAMS irisParams;
+    CAM_CONFIG cameraParams;
+    GAZE_ANGLE leftAngle;
+    GAZE_ANGLE rightAngle;
+};
+
 }
