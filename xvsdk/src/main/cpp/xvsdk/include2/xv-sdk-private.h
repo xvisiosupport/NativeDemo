@@ -143,6 +143,7 @@ public:
     virtual bool saveMapAndSwitchToCslam(std::streambuf &, std::function<void (int, int)> , std::function<void (float)> ) {throw std::runtime_error("Invalid call, not implemented.");}
     virtual bool switchToCSlam(std::function<void (int)> , std::function<void (float)> ) {throw std::runtime_error("Invalid call, not implemented.");}
     virtual bool saveMap(std::streambuf &, bool ) {throw std::runtime_error("Invalid call, not implemented.");}
+    virtual bool saveMapAndRefineCalibration(std::streambuf &, std::vector<CalibrationEx> &) {throw std::runtime_error("Invalid call, not implemented.");}
 
     virtual bool getLastVSlamPose(Pose &) {throw std::runtime_error("Invalid call, not implemented.");}
 
@@ -258,6 +259,9 @@ public:
     virtual bool writeThermalCameraCalibration(const std::vector<CalibrationEx>&){ return false;}
     virtual bool writeIrTrackingCameraCalibration(const std::vector<CalibrationEx>&){ return false;}
     virtual bool writeIrTrackingCamera2Calibration(const std::vector<CalibrationEx>&){ return false;}
+
+    virtual bool readDisplayIpdParas(std::array<float, 10>& buf){ return false;}
+    virtual bool writeDisplayIpdParas(const std::array<float, 10>& buf){ return false;}
 
    /**
     * @brief Provide a SLAM without IMU data.

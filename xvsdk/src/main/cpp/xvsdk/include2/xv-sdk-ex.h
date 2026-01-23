@@ -766,6 +766,9 @@ public:
     virtual bool getAecParameters(IspAecSetting& params) = 0;
     virtual void setAecParameters(const IspAecSetting& params) = 0;
 
+    virtual bool readRefineCalib(std::vector<CalibrationEx> &) = 0;
+    virtual bool writeRefineCalib(std::vector<CalibrationEx> &) = 0;
+
     virtual ~FisheyeCamerasEx() { }
 
 };

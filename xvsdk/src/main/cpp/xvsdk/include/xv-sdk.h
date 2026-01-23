@@ -519,6 +519,8 @@ public:
 
     virtual const std::vector<uint8_t>& getFirstSharedMap() = 0;
 
+    virtual bool saveMapAndRefineCalibration(std::streambuf & map) = 0;
+
     virtual ~Slam() {}
 };
 
