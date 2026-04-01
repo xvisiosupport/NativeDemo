@@ -281,6 +281,11 @@ public:
     virtual std::shared_ptr<PointCloud> formatPmdCloudToPointCloudStruct(DepthImage const &) const = 0;
 
     /**
+     * @brief Convert the point cloud coordinate system to the left-handed SLAM coordinate system.
+     */
+    virtual std::shared_ptr<PointCloud> convertDepthToPointCloudLeftHandSlamCoordinate(DepthImage &) = 0;
+
+    /**
      * @brief Set which stream will be reported. Not work with sony TOF.
      */
     virtual bool setStreamMode(StreamMode mode) = 0;
@@ -671,6 +676,20 @@ public:
      * @param[in] brightness [0,255], 0 is off
      */
     virtual bool setLedBrighness( int eye, int led, int brightness ) = 0;
+
+    /**
+     * @brief Set eyetracking parameters to flash
+     *
+     * @param[in] xv::GazeParams params
+     */
+    virtual bool setParams(const xv::GazeParams params) = 0;
+
+    /**
+     * @brief Get eyetracking parameters to flash
+     *
+     * @param[in] xv::GazeParams params
+     */
+    virtual bool getParams(xv::GazeParams& params) = 0;
 
     virtual ~EyetrackingCamera() {}
 };

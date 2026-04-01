@@ -1732,4 +1732,15 @@ struct IrisConfig
     GAZE_ANGLE rightAngle;
 };
 
+struct GazeParams{
+    int leftGain;
+    int rightGain;
+    int leftTime;
+    int rightTime;
+    int leftLed;
+    int leftBrightness;
+    int rightLed;
+    int rightBrightness;
+};
+
 }
