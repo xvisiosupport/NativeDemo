@@ -1,148 +1,224 @@
 <?xml version="1.0" encoding="utf-8"?>
 <org.xvisio.xslam.PoseDisplay xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="12dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginRight="12dp"
+    android:background="@drawable/bg_tech_panel"
+    android:orientation="vertical"
+    android:paddingLeft="14dp"
+    android:paddingTop="12dp"
+    android:paddingRight="14dp"
+    android:paddingBottom="12dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="[ SLAM POSE ]"
+            android:textAllCaps="true"
+            android:textColor="@color/tech_accent"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace" />
+
+        <TextView
+            android:id="@+id/tv_slam_fps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text=""
+            android:textColor="@color/tech_green"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace" />
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="729dp"
-        android:orientation="horizontal"
-        tools:layout_editor_absoluteX="1dp"
-        tools:layout_editor_absoluteY="1dp">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-        <TableLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_weight="1">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/xLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="x:" />
+                    android:text="X"
+                    android:textColor="@color/tech_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/xValue"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0.0" />
+                    android:text="0.000"
+                    android:textColor="@color/tech_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-            </TableRow>
-
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/yLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="y:" />
+                    android:text="Y"
+                    android:textColor="@color/tech_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/yValue"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0.0" />
-            </TableRow>
+                    android:text="0.000"
+                    android:textColor="@color/tech_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/zLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="z:" />
+                    android:text="Z"
+                    android:textColor="@color/tech_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/zValue"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0.0" />
+                    android:text="0.000"
+                    android:textColor="@color/tech_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
 
-            </TableRow>
-
-        </TableLayout>
-
-        <TableLayout
-            android:layout_width="match_parent"
+        <View
+            android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_weight="1">
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:background="@drawable/divider_tech" />
 
-            <TableRow
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/pitchLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="pitch:" />
+                    android:text="Pitch"
+                    android:textColor="@color/tech_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/pitchValue"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0.0" />
-            </TableRow>
+                    android:text="0.000"
+                    android:textColor="@color/tech_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/yawLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="yaw:" />
+                    android:text="Yaw"
+                    android:textColor="@color/tech_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/yawValue"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0.0" />
-            </TableRow>
+                    android:text="0.000"
+                    android:textColor="@color/tech_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/rollLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="roll:" />
+                    android:text="Roll"
+                    android:textColor="@color/tech_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/rollValue"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0.0" />
-            </TableRow>
-        </TableLayout>
-
+                    android:text="0.000"
+                    android:textColor="@color/tech_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </org.xvisio.xslam.PoseDisplay>

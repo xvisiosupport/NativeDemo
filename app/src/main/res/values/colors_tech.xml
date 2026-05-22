@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tech/Sci-Fi Dark Theme Palette -->
+    <color name="tech_bg_primary">#0A0E17</color>
+    <color name="tech_bg_secondary">#111827</color>
+    <color name="tech_bg_card">#1A2332</color>
+    <color name="tech_bg_card_hover">#222D3F</color>
+    <color name="tech_bg_input">#0D1321</color>
+
+    <!-- Accent Colors - Cyan Neon -->
+    <color name="tech_accent">#00E5FF</color>
+    <color name="tech_accent_dark">#00B8CC</color>
+    <color name="tech_accent_glow">#33E5FFFF</color>
+    <color name="tech_accent_dim">#1A90A9</color>
+
+    <!-- Secondary Accent - Electric Blue -->
+    <color name="tech_blue">#2979FF</color>
+    <color name="tech_blue_glow">#3379FFFF</color>
+
+    <!-- Warning/Action - Amber -->
+    <color name="tech_amber">#FFAB00</color>
+    <color name="tech_amber_glow">#33FFAB00</color>
+
+    <!-- Success - Green -->
+    <color name="tech_green">#00E676</color>
+    <color name="tech_green_dim">#1BB06A</color>
+
+    <!-- Danger - Red -->
+    <color name="tech_red">#FF1744</color>
+
+    <!-- Text Colors -->
+    <color name="tech_text_primary">#E8ECF2</color>
+    <color name="tech_text_secondary">#8899AA</color>
+    <color name="tech_text_hint">#4A5A6A</color>
+    <color name="tech_text_accent">#00E5FF</color>
+
+    <!-- Border / Stroke -->
+    <color name="tech_border">#1E2D42</color>
+    <color name="tech_border_accent">#2A4066</color>
+    <color name="tech_border_highlight">#00E5FF</color>
+
+    <!-- Divider -->
+    <color name="tech_divider">#1A2535</color>
+
+    <!-- Status colors for data display -->
+    <color name="tech_status_active">#00E676</color>
+    <color name="tech_status_idle">#546E7A</color>
+    <color name="tech_status_warning">#FFAB00</color>
+    <color name="tech_status_error">#FF1744</color>
+</resources>
