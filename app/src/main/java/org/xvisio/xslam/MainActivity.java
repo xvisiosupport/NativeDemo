@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView mIvStream;
     private VideoView videoView;
     ConstraintLayout mClTof;
-    TextView mTvSolution, mTvFps,mTvResult;
+    TextView mTvSolution, mTvFps, mTvResult, mTvSlamFps;
     TextView mTvElectroLevel;
     TextView mTvVolumeLevel;
     TextView mTvMicStatus;
@@ -118,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
     private long mSlamFpsWindowStartNs = 0L;
     private int mSlamFrameCounter = 0;
     private boolean mVsyncMonitoring = false;
+    private int mVsyncOver20Count = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -192,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
         mTvSolution = findViewById(R.id.tv_rgb_solution);
         mTvResult = findViewById(R.id.tv_result);
         mTvFps = findViewById(R.id.tv_rgb_fps);
+        mTvSlamFps = findViewById(R.id.tv_slam_fps);
         mBtElectroMinus = findViewById(R.id.bt_electro_minus);
         mBtElectroPlus = findViewById(R.id.bt_electro_plus);
         mBtVolumeMinus = findViewById(R.id.bt_volume_minus);
@@ -487,18 +489,24 @@ public class MainActivity extends AppCompatActivity {
             });
             return;
         }
-        StringBuilder fpsText = new StringBuilder();
-        if (mLastRgbFps >= 0) {
-            fpsText.append("RGB FPS: ").append(mLastRgbFps);
-        }
-        if (mLastSlamFps >= 0) {
-            if (fpsText.length() > 0) {
-                fpsText.append("  ");
+        if (mTvFps != null) {
+            if (mLastRgbFps >= 0) {
+                mTvFps.setVisibility(View.VISIBLE);
+                mTvFps.setText("RGB FPS: " + mLastRgbFps);
+            } else {
+                mTvFps.setVisibility(View.GONE);
+                mTvFps.setText("");
             }
-            fpsText.append("SLAM FPS: ").append(mLastSlamFps);
         }
-        mTvFps.setVisibility(fpsText.length() > 0 ? View.VISIBLE : View.GONE);
-        mTvFps.setText(fpsText.toString());
+        if (mTvSlamFps != null) {
+            if (mLastSlamFps >= 0) {
+                mTvSlamFps.setVisibility(View.VISIBLE);
+                mTvSlamFps.setText("SLAM FPS: " + mLastSlamFps);
+            } else {
+                mTvSlamFps.setVisibility(View.GONE);
+                mTvSlamFps.setText("");
+            }
+        }
     }
 
     private void updateSlamFps() {
@@ -688,6 +696,7 @@ public class MainActivity extends AppCompatActivity {
             setVsyncStatus("Vsync start failed");
             return;
         }
+        mVsyncOver20Count = 0;
         mVsyncMonitoring = true;
         mBtVsyncToggle.setText("Stop Vsync");
         setVsyncStatus("Waiting vsync...");
@@ -986,7 +995,12 @@ public class MainActivity extends AppCompatActivity {
     private final VsyncListener mVsyncListener = new VsyncListener() {
         @Override
         public void onVsyncInterval(double intervalMs) {
-            setVsyncStatus(String.format("Vsync interval: %.3f ms", intervalMs));
+            if (intervalMs > 20.0) {
+                mVsyncOver20Count++;
+                setVsyncStatus(String.format("Vsync interval > 20ms  %d  current: %.3f ms", mVsyncOver20Count, intervalMs));
+            } else {
+                setVsyncStatus(String.format("Vsync interval: %.3f ms", intervalMs));
+            }
         }
     };
 
