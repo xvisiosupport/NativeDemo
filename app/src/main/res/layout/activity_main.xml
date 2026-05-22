@@ -621,7 +621,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_tech_status"
+            android:paddingLeft="12dp"
+            android:paddingTop="6dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="6dp"
             android:text="asr result"
+            android:textColor="@color/tech_amber"
+            android:textSize="12sp"
+            android:textStyle="bold"
             android:visibility="gone" />
 
         <!-- ═══ TOF Stream Preview (Dual View) ═══ -->
