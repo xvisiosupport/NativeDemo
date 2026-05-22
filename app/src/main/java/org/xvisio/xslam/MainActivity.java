@@ -2,6 +2,7 @@ package org.xvisio.xslam;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -18,11 +19,18 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -822,40 +830,158 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showRgbSolutionDialog() {
-        String[] rgbSolutionItems = {"1920x1080", "1280x720", "640x480"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setSingleChoiceItems(rgbSolutionItems, rgbSolution, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                rgbSolution = which;
-                if (mCamera != null) {
-                    mCamera.setRgbSolution(which);
+        String[] rgbSolutionItems = {"3840×2160", "1920×1080", "1280×720", "640×480"};
+        String[] rgbBadges = {"4K", "", "", ""};
+        showBottomResolutionDialog("RGB RESOLUTION", rgbSolutionItems, rgbBadges, rgbSolution,
+            new OnResolutionSelected() {
+                @Override
+                public void onSelected(int index) {
+                    rgbSolution = index;
+                    if (mCamera != null) {
+                        mCamera.setRgbSolution(index);
+                    }
                 }
-                dialog.dismiss();
-            }
-        });
-        builder.show();
+            });
     }
 
     public void showTofSolutionDialog() {
-        String[] tofSolutionItems = {"VGA", "QVGA", "HQVGA"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setSingleChoiceItems(tofSolutionItems, tofSolution, new DialogInterface.OnClickListener() {
+        String[] tofSolutionItems = {"VGA (640×480)", "QVGA (320×240)", "HQVGA (240×160)"};
+        String[] tofBadges = {"", "", ""};
+        showBottomResolutionDialog("TOF RESOLUTION", tofSolutionItems, tofBadges, tofSolution,
+            new OnResolutionSelected() {
+                @Override
+                public void onSelected(int index) {
+                    tofSolution = index;
+                    if (mCamera != null) {
+                        if (cameraSelect == R.id.radio_tof) {
+                            mCamera.restartTofStreamWithSolution(index);
+                        } else {
+                            mCamera.setTofSolution(index);
+                        }
+                    }
+                    updatePreviewModeUi();
+                }
+            });
+    }
+
+    /**
+     * Tech-style bottom sheet dialog for resolution selection
+     */
+    private void showBottomResolutionDialog(String title, String[] items, String[] badges,
+                                            int selectedIdx, final OnResolutionSelected callback) {
+        Dialog bottomDialog = new Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_bottom_resolution, null);
+        bottomDialog.setContentView(dialogView);
+
+        // Set full width, anchor to bottom
+        Window window = bottomDialog.getWindow();
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setGravity(Gravity.BOTTOM);
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            // Dim background slightly
+            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            WindowManager.LayoutParams params = window.getAttributes();
+            params.dimAmount = 0.5f;
+            window.setAttributes(params);
+        }
+
+        // Set title
+        TextView tvTitle = dialogView.findViewById(R.id.tv_sheet_title);
+        tvTitle.setText(title);
+
+        // Build option list
+        LinearLayout optionsContainer = dialogView.findViewById(R.id.ll_options_container);
+        final int[] selectedIndex = {selectedIdx};
+
+        for (int i = 0; i < items.length; i++) {
+            final int index = i;
+            View itemView = getLayoutInflater().inflate(R.layout.item_resolution_option, optionsContainer, false);
+
+            TextView tvLabel = itemView.findViewById(R.id.tv_resolution_label);
+            TextView tvBadge = itemView.findViewById(R.id.tv_resolution_badge);
+            View indicator = itemView.findViewById(R.id.indicator_selected);
+
+            tvLabel.setText(items[i]);
+
+            // Show badge if available
+            if (badges != null && i < badges.length && badges[i] != null && !badges[i].isEmpty()) {
+                tvBadge.setText(badges[i]);
+                tvBadge.setVisibility(View.VISIBLE);
+            }
+
+            // Highlight selected item
+            updateItemSelection(itemView, index == selectedIndex[0]);
+
+            // Click handler
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectedIndex[0] = index;
+                    callback.onSelected(index);
+                    bottomDialog.dismiss();
+                }
+            });
+
+            // Add divider between items (except last)
+            if (i > 0) {
+                View divider = new View(MainActivity.this);
+                divider.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, 1));
+                divider.setBackgroundColor(getResources().getColor(R.color.tech_divider, null));
+                optionsContainer.addView(divider);
+            }
+
+            optionsContainer.addView(itemView);
+        }
+
+        // Tap outside to dismiss
+        dialogView.findViewById(R.id.ll_options_container).setOnTouchListener(
+            new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    return true; // Consume touch so it doesn't dismiss accidentally
+                }
+            });
+
+        // Click on dim area to dismiss
+        dialogView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                tofSolution = which;
-                if (mCamera != null) {
-                    if (cameraSelect == R.id.radio_tof) {
-                        mCamera.restartTofStreamWithSolution(which);
-                    } else {
-                        mCamera.setTofSolution(which);
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    float y = event.getY();
+                    // If tap is in the upper (dimmed) area, dismiss
+                    if (y < 80) {
+                        bottomDialog.dismiss();
+                        return true;
                     }
                 }
-                updatePreviewModeUi();
-                dialog.dismiss();
+                return false;
             }
         });
-        builder.show();
+
+        bottomDialog.show();
+    }
+
+    /** Update visual state of a resolution option item */
+    private void updateItemSelection(View itemView, boolean selected) {
+        View indicator = itemView.findViewById(R.id.indicator_selected);
+        TextView tvLabel = itemView.findViewById(R.id.tv_resolution_label);
+
+        if (selected) {
+            indicator.setVisibility(View.VISIBLE);
+            tvLabel.setTextColor(getResources().getColor(R.color.tech_accent, null));
+            itemView.setBackgroundColor(getResources().getColor(R.color.tech_bg_card_hover, null));
+        } else {
+            indicator.setVisibility(View.INVISIBLE);
+            tvLabel.setTextColor(getResources().getColor(R.color.tech_text_primary, null));
+            itemView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+    }
+
+    /** Callback interface for resolution selection */
+    private interface OnResolutionSelected {
+        void onSelected(int index);
     }
 
     private final DeviceListener mListener = new DeviceListener() {

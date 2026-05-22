@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single resolution option item for bottom sheet -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp">
+
+    <!-- Radio indicator -->
+    <View
+        android:id="@+id/indicator_selected"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:background="@drawable/bg_record_indicator" />
+
+    <!-- Resolution label -->
+    <TextView
+        android:id="@+id/tv_resolution_label"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="14dp"
+        android:gravity="center_vertical"
+        android:text="1920x1080"
+        android:textColor="@color/tech_text_primary"
+        android:textSize="15sp"
+        android:fontFamily="monospace"
+        android:layout_weight="1" />
+
+    <!-- Badge (e.g. "4K", "RECOMMENDED") -->
+    <TextView
+        android:id="@+id/tv_resolution_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:background="@drawable/bg_chip"
+        android:gravity="center"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:text=""
+        android:textColor="@color/tech_accent"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+</LinearLayout>

@@ -1080,6 +1080,9 @@ Java_org_xvisio_xvsdk_XCamera_nSetRgbSolution(JNIEnv *env, jclass type, jint mod
         case RGB_2560x1920:
             device->colorCamera()->setResolution(xv::ColorCamera::Resolution::RGB_2560x1920);
             break;
+        case RGB_3840x2160:
+            device->colorCamera()->setResolution(xv::ColorCamera::Resolution::RGB_3840x2160);
+            break;
         default:
             break;
     }

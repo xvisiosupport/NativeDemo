@@ -51,6 +51,7 @@
                 android:id="@+id/logo"
                 android:layout_width="80dp"
                 android:layout_height="56dp"
+                android:visibility="gone"
                 android:scaleType="centerInside"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
