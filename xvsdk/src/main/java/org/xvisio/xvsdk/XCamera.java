@@ -153,12 +153,39 @@ public class XCamera extends XVisioClass {
     public synchronized void setRgbSolution(int mode) {
         nSetRgbSolution(mode);
     }
+
+    public synchronized void setTofSolution(int mode) {
+        nSetTofSolution(mode);
+    }
+
+    public void restartTofStreamWithSolution(final int mode) {
+        mService.execute(new Runnable() {
+            @Override
+            public void run() {
+                stopTofStream();
+                nSetTofSolution(mode);
+                startTofStream();
+            }
+        });
+    }
     public synchronized void testFuncs() {
         nTestFuncs();
     }
 
     public synchronized void setSlamMode(int mode) {
         nSetSlamMode(mode);
+    }
+
+    public synchronized boolean setElectrochromicLevel(int level) {
+        return nSetElectrochromicLevel(level);
+    }
+
+    public synchronized boolean startVsyncMonitor() {
+        return nStartVsyncMonitor();
+    }
+
+    public synchronized void stopVsyncMonitor() {
+        nStopVsyncMonitor();
     }
 
     static PoseListener mPoseListener;
@@ -203,6 +230,12 @@ public class XCamera extends XVisioClass {
         mTofIrListener = listener;
     }
 
+    static VsyncListener mVsyncListener;
+
+    public synchronized void setVsyncListener(VsyncListener listener) {
+        mVsyncListener = listener;
+    }
+
     public static synchronized void addUsbDevice(String deviceName, int fileDescriptor) {
         nAddUsbDevice(deviceName, fileDescriptor);
     }
@@ -216,9 +249,13 @@ public class XCamera extends XVisioClass {
     private static native void nRemoveUsbDevice(int fileDescriptor);
 
     private static native void nSetRgbSolution(int mode);
+    private static native void nSetTofSolution(int mode);
     private static native void nTestFuncs();
 
     private static native void nSetSlamMode(int mode);
+    private static native boolean nSetElectrochromicLevel(int level);
+    private static native boolean nStartVsyncMonitor();
+    private static native void nStopVsyncMonitor();
 
     private static native void initCallbacks();
 
@@ -296,6 +333,12 @@ public class XCamera extends XVisioClass {
     public static void tofIrCallback(int width, int height, int[] data) {
         if (mTofListener != null) {
             mTofIrListener.onTofIr(width, height, data);
+        }
+    }
+
+    public static void vsyncIntervalCallback(double intervalMs) {
+        if (mVsyncListener != null) {
+            mVsyncListener.onVsyncInterval(intervalMs);
         }
     }
 

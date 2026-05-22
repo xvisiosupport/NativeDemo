@@ -10,6 +10,7 @@
 #include <fstream>
 #include <mutex>
 #include <cmath>
+#include <atomic>
 #include "customer/test.h"
 #include "xv-wrapper.h"
 #include <android/log.h>
@@ -22,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include "fps_count.hpp"
 
 #define LOG_TAG "xslam#wrapper"
@@ -53,7 +55,11 @@ struct __attribute__((pack)) RgbaStruct {
 };
 
 extern std::vector<std::vector<unsigned char>> rgb_colors;
+typedef int (*__RkVsyncInit)();
 
+typedef int (*__RkWaitVsync)(int screenId);
+
+#define RK_LIB_PATH "/system/lib64/librkvsync.so"
 static std::shared_ptr<xv::Device> device;
 static int slamId = -1;
 static int rgbId = -1;
@@ -61,6 +67,7 @@ static int tofId = -1;
 static int stereoId = -1;
 static int imuId = -1;
 static int sgmbId = -1;
+static int tofResolutionMode = static_cast<int>(xv::TofCamera::Resolution::VGA);
 
 class androidout : public std::streambuf {
 public:
@@ -129,6 +136,13 @@ private:
 void yuv2rgb(unsigned char *yuyv_image, int *rgb_image, int width, int height);
 
 static bool m_ready = false;
+static void *dso = NULL;
+
+static __RkVsyncInit RkVsyncInit = NULL;
+static __RkWaitVsync RkWaitVsync = NULL;
+bool IsRKb = 0;
+static std::atomic<bool> g_vsyncRunning(false);
+static std::thread g_vsyncThread;
 
 static JavaVM *jvm = 0;
 static jclass s_XCameraClass = nullptr;
@@ -142,6 +156,7 @@ static jmethodID s_sgbmCallback = nullptr;
 
 static jmethodID s_rgbCallback = nullptr;
 static jmethodID s_rgbFpsCallback = nullptr;
+static jmethodID s_vsyncIntervalCallback = nullptr;
 
 static jmethodID s_poseCallback = nullptr;
 static jmethodID s_poseCallbackEx = nullptr;
@@ -167,6 +182,22 @@ static const xv::sgbm_config sgbm_config
         };
 
 xv::RgbPixelPoseWithTof* g_rgb_pixel_pointing = nullptr;
+
+void applyTofResolution() {
+    if (!device || !device->tofCamera()) {
+        return;
+    }
+    auto resolution = static_cast<xv::TofCamera::Resolution>(tofResolutionMode);
+    auto manufacturer = device->tofCamera()->getManufacturer();
+    if (manufacturer == xv::TofCamera::Manufacturer::Sony) {
+        device->tofCamera()->setSonyTofSetting(
+                xv::TofCamera::SonyTofLibMode::LABELIZE_SF,
+                resolution,
+                xv::TofCamera::Framerate::FPS_30);
+    } else {
+        device->tofCamera()->setResolution(static_cast<int>(resolution));
+    }
+}
 
 
 void xv_stop_rgb_pixel_pose() {
@@ -211,6 +242,110 @@ bool xslam_start_get_rgb_pixel_buff3d_pose(pointer_3dpose* pointerPose, Vector2*
 
     return ret;
 }
+int vsyncTest(){
+    if (dso == NULL)
+    {
+        dso = dlopen(RK_LIB_PATH, RTLD_NOW | RTLD_LOCAL);
+    }
+    if (dso == 0)
+    {
+        return 0;
+    }
+    if (RkVsyncInit == NULL)
+    {
+        RkVsyncInit = (__RkVsyncInit)dlsym(dso, "RkVsyncInit");
+        if (RkVsyncInit == NULL)
+        {
+            dlclose(dso);
+            dso = NULL;
+            LOG_ERROR("RkVsyncInit failed");
+            return 0;
+        }
+    }
+    if (RkWaitVsync == NULL)
+    {
+        RkWaitVsync = (__RkWaitVsync)dlsym(dso, "RkWaitVsync");
+        if (RkWaitVsync == NULL)
+        {
+            dlclose(dso);
+            dso = NULL;
+            RkVsyncInit = NULL;
+            LOG_ERROR("RkWaitVsync failed");
+            return 0;
+        }
+    }
+    RkVsyncInit();
+    IsRKb = true;
+    LOG_ERROR("RkVsyncInit");
+    return 1;
+}
+
+bool startVsyncMonitor() {
+    if (g_vsyncRunning.load()) {
+        return true;
+    }
+    if (!jvm || !s_XCameraClass || !s_vsyncIntervalCallback) {
+        LOG_ERROR("startVsyncMonitor failed: jvm or callback not ready");
+        return false;
+    }
+    if (!vsyncTest() || RkWaitVsync == NULL) {
+        return false;
+    }
+    if (g_vsyncThread.joinable()) {
+        g_vsyncThread.join();
+    }
+    g_vsyncRunning.store(true);
+    g_vsyncThread = std::thread([] {
+        if (!jvm || RkWaitVsync == NULL) {
+            g_vsyncRunning.store(false);
+            return;
+        }
+        JNIEnv *jniEnv = nullptr;
+        bool attached = jvm->AttachCurrentThread(&jniEnv, NULL) == JNI_OK;
+        if (!attached || !jniEnv) {
+            LOG_ERROR("startVsyncMonitor failed: AttachCurrentThread error");
+            g_vsyncRunning.store(false);
+            return;
+        }
+        auto lastTick = std::chrono::steady_clock::time_point{};
+        bool hasLastTick = false;
+        while (g_vsyncRunning.load()) {
+            int waitResult = RkWaitVsync(0);
+            if (waitResult < 0) {
+                LOG_ERROR("RkWaitVsync failed: %d", waitResult);
+                break;
+            }
+            auto now = std::chrono::steady_clock::now();
+            if (hasLastTick && jniEnv && s_XCameraClass && s_vsyncIntervalCallback) {
+                double intervalMs = std::chrono::duration<double, std::milli>(now - lastTick).count();
+                jniEnv->CallStaticVoidMethod(s_XCameraClass, s_vsyncIntervalCallback, intervalMs);
+                if (jniEnv->ExceptionCheck()) {
+                    LOG_ERROR("vsyncIntervalCallback threw an exception");
+                    jniEnv->ExceptionDescribe();
+                    jniEnv->ExceptionClear();
+                    break;
+                }
+            }
+            lastTick = now;
+            hasLastTick = true;
+        }
+        g_vsyncRunning.store(false);
+        if (attached) {
+            jvm->DetachCurrentThread();
+        }
+    });
+    return true;
+}
+
+void stopVsyncMonitor() {
+    if (!g_vsyncRunning.exchange(false)) {
+        return;
+    }
+    if (g_vsyncThread.joinable()) {
+        g_vsyncThread.join();
+    }
+}
+
 void onImuCallback(xv::Imu const &imu) {
     JNIEnv *jniEnv;
     jvm->AttachCurrentThread(&jniEnv, NULL);
@@ -665,8 +800,8 @@ void startRgbStream() {
         vector2s[i].x = getRandomValue(480.0f, 1440.0f);
         vector2s[i].y = getRandomValue(270.0f, 810.0f);
     }
-    xv_start_rgb_pixel_pose();
-    xslam_tof_set_steam_mode(4);
+//    xv_start_rgb_pixel_pose();
+//    xslam_tof_set_steam_mode(4);
 }
 
 
@@ -700,7 +835,11 @@ bool setPmdTofIRFunction()
 }
 
 void start_tofir_stream(){
-
+    if (!device || !device->tofCamera()) {
+        return;
+    }
+    stopTofStream();
+    applyTofResolution();
 
     device->tofCamera()->setStreamMode(xv::TofCamera::StreamMode::DepthAndCloud);
 
@@ -713,7 +852,7 @@ void start_tofir_stream(){
         else
             std::cout << "Enable IR failed" << std::endl;
     }
-    device->tofCamera()->registerCallback(onTofCallback);
+    tofId = device->tofCamera()->registerCallback(onTofCallback);
     device->tofCamera()->start();
 }
 
@@ -724,9 +863,7 @@ void startTofStream() {
     }
     setPmdTofIRFunction();
     tofId = device->tofCamera()->registerCallback(onTofCallback);
-    device->tofCamera()->setSonyTofSetting(xv::TofCamera::SonyTofLibMode::LABELIZE_SF,
-                                           xv::TofCamera::Resolution::VGA,
-                                           xv::TofCamera::Framerate::FPS_30);
+    applyTofResolution();
     device->tofCamera()->start();
 
 
@@ -950,6 +1087,17 @@ Java_org_xvisio_xvsdk_XCamera_nSetRgbSolution(JNIEnv *env, jclass type, jint mod
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_org_xvisio_xvsdk_XCamera_nSetTofSolution(JNIEnv *env, jclass type, jint mode) {
+    tofResolutionMode = mode;
+    applyTofResolution();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_xvisio_xvsdk_XCamera_nSetElectrochromicLevel(JNIEnv *env, jclass type, jint level) {
+    return XvWrapper::xv_set_electrochromic_level(level) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_org_xvisio_xvsdk_XCamera_nRemoveUsbDevice(JNIEnv *env, jclass type,
                                                jint fileDescriptor) {
 
@@ -965,6 +1113,7 @@ Java_org_xvisio_xvsdk_XCamera_initCallbacks(JNIEnv *env, jclass type) {
     s_sgbmCallback = env->GetStaticMethodID(s_XCameraClass, "sgbmCallback", "(II[I)V");
     s_rgbCallback = env->GetStaticMethodID(s_XCameraClass, "rgbCallback", "(II[I)V");
     s_rgbFpsCallback = env->GetStaticMethodID(s_XCameraClass, "rgbFpsCallback", "(I)V");
+    s_vsyncIntervalCallback = env->GetStaticMethodID(s_XCameraClass, "vsyncIntervalCallback", "(D)V");
     s_poseCallback = env->GetStaticMethodID(s_XCameraClass, "poseCallback", "(DDDDDD)V");
 }
 
@@ -1032,6 +1181,7 @@ Java_org_xvisio_xvsdk_XCamera_stopSgbmStream(JNIEnv *env, jclass type) {
 
 extern "C" JNIEXPORT void JNICALL
 Java_org_xvisio_xvsdk_XCamera_stopCallbacks(JNIEnv *env, jclass type) {
+    stopVsyncMonitor();
     stopSlamStream();
     stopImuStream();
     stopRgbStream();
@@ -1059,5 +1209,15 @@ Java_org_xvisio_xvsdk_XCamera_getPose(JNIEnv *env, jclass type) {
         }
     }
     return result;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_org_xvisio_xvsdk_XCamera_nStartVsyncMonitor(JNIEnv *env, jclass clazz) {
+    return startVsyncMonitor() ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_org_xvisio_xvsdk_XCamera_nStopVsyncMonitor(JNIEnv *env, jclass clazz) {
+    stopVsyncMonitor();
 }
 

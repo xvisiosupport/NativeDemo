@@ -4,7 +4,7 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed")
 
 set(LIBNAME "xv-wrapper" )
 
-SET(LIBS ${LIBS} xslam-xv-sdk xslam-unity-wrapper)
+SET(LIBS ${LIBS} xslam-xv-sdk xslam-unity-wrapper c++_shared)
 
 set_target_properties(${LIBNAME} PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_ANDROID_ARCH_ABI})

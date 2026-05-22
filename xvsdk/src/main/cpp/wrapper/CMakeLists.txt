@@ -3,7 +3,7 @@ add_library(xslam_wrapper SHARED xslam_android.cpp yuv_to_rgb.cpp)
 
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed")
 
-SET(LIBS ${LIBS} xslam-xv-sdk  xv-wrapper)
+SET(LIBS ${LIBS} xslam-xv-sdk xv-wrapper c++_shared)
 
 target_link_libraries(xslam_wrapper log ${LIBS})
 

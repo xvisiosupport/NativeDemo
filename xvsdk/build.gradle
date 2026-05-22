@@ -1,5 +1,13 @@
 apply plugin: 'com.android.library'
 
+def filteredJniLibsDir = "$buildDir/filtered-jniLibs"
+
+tasks.register("prepareFilteredJniLibs", Sync) {
+    from("../xvsdk/src/main/cpp/xvsdk/libs")
+    into(filteredJniLibsDir)
+    exclude("**/libc++_shared.so")
+}
+
 android {
     namespace "org.xvisio.xvsdk"
     compileSdkVersion 34
@@ -16,7 +24,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                arguments "-DCMAKE_BUILD_TYPE=Release"
+                arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared"
                 abiFilters "arm64-v8a"
             }
         }
@@ -41,7 +49,7 @@ android {
 
     sourceSets {
         main {
-            jniLibs.srcDirs = ['../xvsdk/src/main/cpp/xvsdk/libs']
+            jniLibs.srcDirs = [filteredJniLibsDir]
         }
     }
     
@@ -49,6 +57,12 @@ android {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
         }
+    }
+}
+
+tasks.configureEach {
+    if (it.name =~ /merge.*JniLibFolders/ || it.name =~ /copy.*JniLibsProjectAndLocalJars/) {
+        it.dependsOn(tasks.named("prepareFilteredJniLibs"))
     }
 }
 
