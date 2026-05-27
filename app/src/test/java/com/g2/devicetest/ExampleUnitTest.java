@@ -1,4 +1,4 @@
-package org.xvisio.xslam;
+package com.g2.devicetest;
 
 import org.junit.Test;
 

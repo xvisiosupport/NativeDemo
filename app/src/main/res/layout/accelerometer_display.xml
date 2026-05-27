@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.xvisio.xslam.AccelerometerDisplay xmlns:android="http://schemas.android.com/apk/res/android"
+<com.g2.devicetest.AccelerometerDisplay xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/my_v_linear_layout"
     android:layout_width="match_parent"
     android:layout_height="75dp"
     android:orientation="vertical">
 
-    <!--org.xvisio.xslam.ImuDisplay
+    <!--com.g2.devicetest.ImuDisplay
         android:id="@+id/imuZ"
         android:layout_width="match_parent"
         android:layout_height="25dp" />
-    <org.xvisio.xslam.ImuDisplay
+    <com.g2.devicetest.ImuDisplay
         android:id="@+id/imuY"
         android:layout_width="match_parent"
         android:layout_height="25dp" />
-    <org.xvisio.xslam.ImuDisplay
+    <com.g2.devicetest.ImuDisplay
         android:id="@+id/imuX"
         android:layout_width="match_parent"
         android:layout_height="25dp" /-->
@@ -37,4 +37,4 @@
         android:layout_height="25dp" />
 
 
-</org.xvisio.xslam.AccelerometerDisplay>
+</com.g2.devicetest.AccelerometerDisplay>

@@ -5,7 +5,7 @@
  * @brief  Simple Application subclass.
  * @author Ryan Pavlik <ryan.pavlik@collabora.com>
  */
-package org.xvisio.xslam;
+package com.g2.devicetest;
 
 import android.app.Application;
 

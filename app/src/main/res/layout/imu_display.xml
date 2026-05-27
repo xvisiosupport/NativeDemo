@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.xvisio.xslam.ImuDisplay xmlns:android="http://schemas.android.com/apk/res/android"
+<com.g2.devicetest.ImuDisplay xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/my_linear_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -35,4 +35,4 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-</org.xvisio.xslam.ImuDisplay>
+</com.g2.devicetest.ImuDisplay>
