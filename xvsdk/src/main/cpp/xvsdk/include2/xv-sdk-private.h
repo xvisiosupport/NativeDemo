@@ -116,7 +116,7 @@ public:
     virtual bool pause() {throw std::runtime_error("Invalid call, not implemented.");}
     virtual bool getPose(Pose &, double );
     virtual bool getPoseAt(Pose &, double );
-
+    virtual bool observeFixedFrame(double, Transform const&);
 
     virtual int registerCallback(std::function<void (const Pose &)> cb);
     virtual bool unregisterCallback(int cb);

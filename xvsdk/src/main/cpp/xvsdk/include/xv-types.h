@@ -6,6 +6,7 @@
 #include <limits>
 #include <string>
 #include <memory>
+#include <cstdint>
 
 #if defined(__ANDROID__) && !defined(__x86_64__)
 #define __XV_DRIVER_ONLY__
@@ -1046,7 +1047,7 @@ struct RgbImage {
  * @brief A color image given by #xv::ColorCamera
  */
 struct ColorImage {
-    enum class Codec { YUYV = 0, YUV420p, JPEG, NV12, BITSTREAM};
+    enum class Codec { YUYV = 0, YUV420p, JPEG, NV12, H264, H265, MJPG, BITSTREAM};
     Codec codec = Codec::YUYV;
     std::size_t width = 0; //!< width of the image (in pixel)
     std::size_t height = 0; //!< height of the image (in pixel)
@@ -1741,6 +1742,58 @@ struct GazeParams{
     int leftBrightness;
     int rightLed;
     int rightBrightness;
+};
+
+struct xvCMRTrackingResult
+{
+    int             templateId;       /**< Template ID returned by cmrAddTemplate*. */
+    char            templateName[128];/**< Null-terminated template name. */
+    int             status;           /**< Target lifecycle status. */
+    double          pose[16];         /**< 4x4 row-major target-to-camera pose, OpenCV convention, translation in meters. */
+    double          quality;          /**< Inlier ratio in [0,1]. */
+    int             inlierCount;      /**< Number of PnP RANSAC inliers. */
+    double          hostTimestamp;
+};
+
+struct xvCMRTemplate
+{
+    char name[100];
+    char fileURL[100];
+    double width;
+    double height;
+};
+
+enum xvCMRResolution {
+    RGB_1920x1080 = 0,
+    RGB_1280x720  = 1,
+    RGB_640x480   = 2,
+};
+
+struct xvCMRParams
+{
+    int     isStatic; /**< Non-zero if the object is static in world space; zero if it may move. Default value: 0.*/
+    bool    useColorImage;
+    int     useTextureEdgs; /**< Non-zero to enable texture edges; zero to disable. Default value: 0.*/
+    int     aiUseGPU; /**< Non-zero to enable GPU acceleration for AI; zero to use CPU only.*/
+    int     aiThreadsNum; /**< Number of CPU threads to use for AI inference. Set to 0 for automatic selection.*/
+    double  gradThresh; /**< Gradient threshold, valid range [0, 765]. Default value: 40.*/
+    double  initQualityThresh; /**< Quality threshold [0.0, 1.0]. Default value: 0.7.*/
+    double  trackQualityThresh; /**< Quality threshold [0.0, 1.0]. Default value: 0.55.*/
+    int     controlPointsMaxNum; /**< Maximum number of control points. Default value: 3000.*/
+    double  poseSmoothFactor; /**< Smoothing factor in the range [0.0, 1.0]. Default value: 0.2.*/
+    int     edgeGap; /**< Edge spacing parameter. Default value: 2.*/
+    int     cameraType;
+    int     controlPointsSlamStep;
+    int     backendMode;
+};
+
+struct SlamMapInfo
+{
+    uint8_t index;
+    uint8_t total;
+    int32_t time;
+    int32_t size;
+    char name[40];
 };
 
 }
