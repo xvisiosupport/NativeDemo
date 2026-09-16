@@ -389,6 +389,7 @@ public:
      */
     virtual bool reset() = 0;
 
+    virtual bool resetVIO() = 0;
     /**
      * @brief Pause the 6dof tracker (SLAM)
      * @return return true if well pause, else if something went wrong.
@@ -424,6 +425,27 @@ public:
      * @return true if the pose can be returned, false else. If timestamp is too in the past or too in the future, return false.
      */
     virtual bool getPoseAt(Pose& pose, double timestamp) = 0;
+
+    /**
+     * @brief Add an observation of a fixed frame to stabilize published SLAM poses.
+     *
+     * The observation may be submitted after the image has been processed. The
+     * acquisition timestamp must still be used so SLAM can retrieve the matching
+     * uncorrected device pose internally. Once enough coherent observations have
+     * been received, poses returned by getPose(), getPoseAt() and registered pose
+     * callbacks are expressed in the corrected frame. The internal map is not
+     * modified. Successive observations must be submitted in non-decreasing
+     * acquisition timestamp order.
+     *
+     * @param[in] acquisitionTimestamp Image acquisition timestamp in seconds,
+     * using the same host clock as getPoseAt().
+     * @param[in] deviceFromFixedFrame Transform from fixed-frame coordinates to
+     * the device IMU frame at acquisitionTimestamp.
+     * @return true if a localized uncorrected SLAM pose was available at the
+     * requested timestamp and the observation was submitted; false otherwise or
+     * when the active SLAM mode does not support fixed-frame correction.
+     */
+    virtual bool observeFixedFrame(double acquisitionTimestamp, Transform const& deviceFromFixedFrame) = 0;
 
     /**
      * @brief Register a callback called when visual SLAM compute a new unfiltered pose.
@@ -487,6 +509,9 @@ public:
      * 3D points from the reference map.
      */
     virtual bool loadMapAndSwitchToCslam(std::streambuf& mapStream, std::function<void(int /* status of load map */)> done_callback, std::function<void(float)> localized_on_reference_map={}) = 0;
+    
+    virtual bool loadMapAndSwitchToCslam(const std::string& file) = 0;
+
     /**
      * @brief Save a SLAM map and use it as an immutable reference map.
      *
@@ -499,6 +524,11 @@ public:
      */
     virtual bool saveMapAndSwitchToCslam(std::streambuf& mapStream, std::function<void(int /* status of save map */, int /* map quality */)> done_callback, std::function<void(float)> localized_on_reference_map={}) = 0;
 
+    virtual bool saveMapAndSwitchToCslam(const std::string& file) = 0;
+
+    virtual std::vector<SlamMapInfo> getMaps() = 0 ;
+
+    virtual bool deleteMap(const std::string& file) = 0 ;
     /**
      * @brief slam pose scale calibration.
      *
@@ -1370,6 +1400,40 @@ public:
     virtual void controlControllerVibration(int time, bool enable, const WirelessControllerDataType& deviceType) = 0;
 };
 
+class CMRImageTracker : virtual public Stream<std::vector<xv::xvCMRTrackingResult>&> {
+public:
+
+    virtual void loadTemplateImage(const char name[], const char imageURL[], double physicalWidthMeters, double physicalHeightMeters) = 0;
+
+    virtual void setLicensePath(const char path[]) = 0;
+
+    virtual void setResolution(xv::xvCMRResolution resolution) = 0;
+
+    virtual void setParams(xv::xvCMRParams params) = 0;
+
+    virtual ~CMRImageTracker(){}
+};
+
+class CMRModelTracker : virtual public Stream<std::vector<xv::xvCMRTrackingResult>&> {
+public:
+
+    virtual void setLicensePath(const char path[]) = 0;
+
+    virtual void loadTemplateModel(const char modelURl[], const char datUrl[]) = 0;
+
+    virtual void setResolution(xv::xvCMRResolution resolution) = 0;
+
+    virtual void setParams(xv::xvCMRParams params) = 0;
+
+    virtual void registerGetSlamPoseCallback() = 0;
+
+    virtual void unregisterGetSlamPoseCallback() = 0;
+
+    virtual void setSlamPose(const double pose[]) = 0;
+
+    virtual ~CMRModelTracker(){}
+};
+
 /**
  * @brief Class to get tracking results and raw outputs with a connected device.
  *
@@ -1524,6 +1588,10 @@ public:
     virtual std::shared_ptr<WirelessController> wirelessController() = 0;
 
     virtual std::shared_ptr<BeiDouGPS> beiDouGPS() = 0;
+
+    virtual std::shared_ptr<CMRImageTracker> cmrImageTracker() = 0;
+
+    virtual std::shared_ptr<CMRModelTracker> cmrModelTracker() = 0;
 
     /**
      * @brief Let device sleep.
