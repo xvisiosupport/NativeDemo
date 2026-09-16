@@ -1380,6 +1380,35 @@ bool xv_get_tofir_image(unsigned char *data, int width, int height) {
 
 /**
  * @brief 设置电致变色等级
+ * @param level 电致变色等级，范围 1-7
+ * @return bool 操作是否成功
+ */
+    bool xv_set_hms_electrochromic_level(int level) {
+        if (device) {
+            if (level < 0 || level > 7) {
+                return false; // 无效的等级
+            }
+
+            std::vector<unsigned char> write;
+            std::vector<unsigned char> vecRead;
+
+            // 添加头部数据
+            write.push_back(0x02);
+            write.push_back(0xcd);
+            write.push_back(0x02);
+//      write.push_back(0x02);
+
+            // 添加电致变色等级
+            write.push_back(static_cast<unsigned char>(level));
+
+            // 调用设备模块的 hidWriteAndRead 操作
+            return device->hidWriteAndRead(write, vecRead);
+        } else {
+            return false; // 设备无效
+        }
+    }
+/**
+ * @brief 设置电致变色等级
  * @param level 电致变色等级，范围 0-20
  * @return bool 操作是否成功
  */

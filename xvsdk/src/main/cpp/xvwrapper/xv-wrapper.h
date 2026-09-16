@@ -80,6 +80,7 @@ extern "C" {
         EXPORT_API void xv_stop_colorCamera2(int id);
         EXPORT_API void xv_stop_thermalCamera(int id);
         EXPORT_API bool xv_switch_display_state(int eye_type, bool isOpen);
+        EXPORT_API bool xv_set_hms_electrochromic_level(int level);
         EXPORT_API bool xv_set_electrochromic_level(int level);
         EXPORT_API bool xv_start_eyetracking();
         EXPORT_API void xv_read_eyetracking_calibrate();

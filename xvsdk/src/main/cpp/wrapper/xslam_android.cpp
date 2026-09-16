@@ -5,18 +5,22 @@
 #include <string>
 #include <regex>
 #include <sstream>
+#include <iomanip>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <mutex>
 #include <cmath>
 #include <atomic>
+#include <cerrno>
+#include <cstring>
 #include "customer/test.h"
 #include "xv-wrapper.h"
 #include <android/log.h>
 #include <thread>
 #include <chrono>
 #include <math.h>
+#include <sched.h>
 #include <xv-sdk.h>
 #include "xv-sdk-ex.h"
 #include "unity-wrapper.h"
@@ -182,6 +186,124 @@ static const xv::sgbm_config sgbm_config
         };
 
 xv::RgbPixelPoseWithTof* g_rgb_pixel_pointing = nullptr;
+
+static long getOnlineCpuCount() {
+    long cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
+    return cpuCount > 0 ? cpuCount : 1;
+}
+
+static std::string cpuSetToString(const cpu_set_t &set, long cpuCount) {
+    std::ostringstream stream;
+    bool hasCpu = false;
+    stream << "[";
+    for (long cpu = 0; cpu < cpuCount; ++cpu) {
+        if (CPU_ISSET(static_cast<int>(cpu), &set)) {
+            if (hasCpu) {
+                stream << ",";
+            }
+            stream << cpu;
+            hasCpu = true;
+        }
+    }
+    if (!hasCpu) {
+        stream << "empty";
+    }
+    stream << "]";
+    return stream.str();
+}
+
+static int findFirstAllowedCpu(const cpu_set_t &set, long cpuCount) {
+    for (long cpu = 0; cpu < cpuCount; ++cpu) {
+        if (CPU_ISSET(static_cast<int>(cpu), &set)) {
+            return static_cast<int>(cpu);
+        }
+    }
+    return 0;
+}
+
+static std::string runCpuAffinityProbe() {
+    const long cpuCount = getOnlineCpuCount();
+    cpu_set_t originalMask;
+    CPU_ZERO(&originalMask);
+
+    if (sched_getaffinity(0, sizeof(originalMask), &originalMask) != 0) {
+        LOG_ERROR("cpu affinity probe: sched_getaffinity failed, errno=%d (%s)",
+                  errno, strerror(errno));
+        std::ostringstream stream;
+        stream << "CPU affinity unsupported\ngetaffinity failed: errno=" << errno
+               << " (" << strerror(errno) << ")";
+        return stream.str();
+    }
+
+    const int targetCpu = findFirstAllowedCpu(originalMask, cpuCount);
+    cpu_set_t targetMask;
+    CPU_ZERO(&targetMask);
+    CPU_SET(targetCpu, &targetMask);
+
+    LOG_DEBUG("cpu affinity probe: onlineCpuCount=%ld, originalMask=%s, targetCpu=%d",
+              cpuCount, cpuSetToString(originalMask, cpuCount).c_str(), targetCpu);
+
+    const int setResult = sched_setaffinity(0, sizeof(targetMask), &targetMask);
+    const int setErrno = errno;
+    if (setResult != 0) {
+        LOG_ERROR("cpu affinity probe: sched_setaffinity failed, errno=%d (%s), targetMask=%s",
+                  setErrno, strerror(setErrno), cpuSetToString(targetMask, cpuCount).c_str());
+        std::ostringstream stream;
+        stream << "CPU affinity unsupported\n"
+               << "onlineCpuCount=" << cpuCount
+               << " targetCpu=" << targetCpu
+               << "\noriginalMask=" << cpuSetToString(originalMask, cpuCount)
+               << "\nsetaffinity failed: errno=" << setErrno
+               << " (" << strerror(setErrno) << ")";
+        return stream.str();
+    }
+
+    cpu_set_t verifyMask;
+    CPU_ZERO(&verifyMask);
+    bool verifyReadOk = false;
+    if (sched_getaffinity(0, sizeof(verifyMask), &verifyMask) != 0) {
+        LOG_ERROR("cpu affinity probe: verify sched_getaffinity failed, errno=%d (%s)",
+                  errno, strerror(errno));
+    } else {
+        verifyReadOk = true;
+        LOG_DEBUG("cpu affinity probe: bind success, verifyMask=%s",
+                  cpuSetToString(verifyMask, cpuCount).c_str());
+    }
+
+    const int restoreResult = sched_setaffinity(0, sizeof(originalMask), &originalMask);
+    const int restoreErrno = errno;
+    if (restoreResult != 0) {
+        LOG_ERROR("cpu affinity probe: restore failed, errno=%d (%s), restoreMask=%s",
+                  restoreErrno, strerror(restoreErrno), cpuSetToString(originalMask, cpuCount).c_str());
+        std::ostringstream stream;
+        stream << "CPU affinity partially supported\n"
+               << "bind ok on cpu " << targetCpu
+               << "\nverifyMask=" << (verifyReadOk ? cpuSetToString(verifyMask, cpuCount) : "unavailable")
+               << "\nrestore failed: errno=" << restoreErrno
+               << " (" << strerror(restoreErrno) << ")";
+        return stream.str();
+    }
+
+    cpu_set_t restoredMask;
+    CPU_ZERO(&restoredMask);
+    bool restoreReadOk = false;
+    if (sched_getaffinity(0, sizeof(restoredMask), &restoredMask) == 0) {
+        restoreReadOk = true;
+        LOG_DEBUG("cpu affinity probe: restore success, restoredMask=%s",
+                  cpuSetToString(restoredMask, cpuCount).c_str());
+    } else {
+        LOG_ERROR("cpu affinity probe: post-restore sched_getaffinity failed, errno=%d (%s)",
+                  errno, strerror(errno));
+    }
+    std::ostringstream stream;
+    stream << "CPU affinity supported\n"
+           << "onlineCpuCount=" << cpuCount
+           << " targetCpu=" << targetCpu
+           << "\noriginalMask=" << cpuSetToString(originalMask, cpuCount)
+           << "\nverifyMask=" << (verifyReadOk ? cpuSetToString(verifyMask, cpuCount) : "unavailable")
+           << "\nrestoredMask=" << (restoreReadOk ? cpuSetToString(restoredMask, cpuCount) : "unavailable");
+    return stream.str();
+}
 
 void applyTofResolution() {
     if (!device || !device->tofCamera()) {
@@ -622,13 +744,176 @@ void startTimer() {
 
 
 extern "C"
-JNIEXPORT void JNICALL
+JNIEXPORT jstring JNICALL
 Java_org_xvisio_xvsdk_XCamera_nTestFuncs(JNIEnv *env, jclass clazz) {
-    // TODO: implement nTestFuncs()
-    __android_log_print(ANDROID_LOG_WARN, "xv#wrapper",
-                        "test func entry");
-    XvWrapper::xv_save_ir_tracking_image();
+    __android_log_print(ANDROID_LOG_WARN, "xv#wrapper", "test func entry");
+    std::string result = runCpuAffinityProbe();
+    return env->NewStringUTF(result.c_str());
 }
+
+static void appendDoubleArray(std::ostringstream &stream, const char *label, const double *values, int size) {
+    stream << label << ": [";
+    for (int i = 0; i < size; ++i) {
+        if (i > 0) {
+            stream << ", ";
+        }
+        stream << values[i];
+    }
+    stream << "]\n";
+}
+
+static void appendTransform(std::ostringstream &stream, const char *label, const transform &value) {
+    stream << label << ":\n";
+    appendDoubleArray(stream, "  rotation", value.rotation, 9);
+    appendDoubleArray(stream, "  translation", value.translation, 3);
+}
+
+static void appendPdm(std::ostringstream &stream, const char *label, const pdm &value) {
+    stream << label << ":\n";
+    appendDoubleArray(stream, "  K", value.K, 11);
+}
+
+static void appendUnified(std::ostringstream &stream, const char *label, const unified &value) {
+    stream << label << ":\n";
+    appendDoubleArray(stream, "  K", value.K, 7);
+}
+
+static void appendImuBias(std::ostringstream &stream, const imu_bias &value) {
+    appendDoubleArray(stream, "gyro_offset", value.gyro_offset, 3);
+    appendDoubleArray(stream, "accel_offset", value.accel_offset, 3);
+}
+
+static std::string sanitizeFileName(const std::string &name) {
+    if (name.empty()) {
+        return "unknown_sn";
+    }
+    return std::regex_replace(name, std::regex("[^A-Za-z0-9._-]"), "_");
+}
+
+static std::string buildCalibrationReport() {
+    if (!device) {
+        return "ERROR: device unavailable";
+    }
+
+    char snBuffer[256] = {0};
+    UnityWrapper::xv_get_sn(snBuffer, sizeof(snBuffer));
+    std::string serialNumber = sanitizeFileName(snBuffer);
+
+    imu_bias imuBias{};
+    stereo_fisheyes stereoFisheyes{};
+    int imuFisheyeShiftUs = 0;
+    pdm_calibration displayCalibration{};
+    pdm_calibration tofCalibration{};
+    rgb_calibration rgbCalibration{};
+    stereo_pdm_calibration stereoFisheyesPdmCalibration{};
+    stereo_pdm_calibration stereoDisplayCalibration{};
+
+    bool imuBiasOk = UnityWrapper::readIMUBias(&imuBias);
+    bool stereoFisheyesOk = UnityWrapper::readStereoFisheyesCalibration(&stereoFisheyes, &imuFisheyeShiftUs);
+    bool displayCalibrationOk = UnityWrapper::readDisplayCalibration(&displayCalibration);
+    bool tofCalibrationOk = UnityWrapper::readToFCalibration(&tofCalibration);
+    bool rgbCalibrationOk = UnityWrapper::readRGBCalibration(&rgbCalibration);
+    bool stereoFisheyesPdmOk = UnityWrapper::readStereoFisheyesPDMCalibration(&stereoFisheyesPdmCalibration);
+    bool stereoDisplayOk = UnityWrapper::readStereoDisplayCalibration(&stereoDisplayCalibration);
+
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(6);
+    stream << "sn: " << serialNumber << "\n\n";
+
+    stream << "[IMU_BIAS] " << (imuBiasOk ? "SUCCESS" : "FAILED") << "\n";
+    if (imuBiasOk) {
+        appendImuBias(stream, imuBias);
+    }
+    stream << "\n";
+
+    stream << "[STEREO_FISHEYES] " << (stereoFisheyesOk ? "SUCCESS" : "FAILED") << "\n";
+    if (stereoFisheyesOk) {
+        stream << "imu_fisheye_shift_us: " << imuFisheyeShiftUs << "\n";
+        for (int i = 0; i < 2; ++i) {
+            std::string prefix = "calibration[" + std::to_string(i) + "]";
+            appendTransform(stream, (prefix + ".extrinsic").c_str(), stereoFisheyes.calibrations[i].extrinsic);
+            appendUnified(stream, (prefix + ".intrinsic").c_str(), stereoFisheyes.calibrations[i].intrinsic);
+        }
+    }
+    stream << "\n";
+
+    stream << "[DISPLAY_CALIBRATION] " << (displayCalibrationOk ? "SUCCESS" : "FAILED") << "\n";
+    if (displayCalibrationOk) {
+        appendTransform(stream, "extrinsic", displayCalibration.extrinsic);
+        appendPdm(stream, "intrinsic", displayCalibration.intrinsic);
+    }
+    stream << "\n";
+
+    stream << "[TOF_CALIBRATION] " << (tofCalibrationOk ? "SUCCESS" : "FAILED") << "\n";
+    if (tofCalibrationOk) {
+        appendTransform(stream, "extrinsic", tofCalibration.extrinsic);
+        appendPdm(stream, "intrinsic", tofCalibration.intrinsic);
+    }
+    stream << "\n";
+
+    stream << "[RGB_CALIBRATION] " << (rgbCalibrationOk ? "SUCCESS" : "FAILED") << "\n";
+    if (rgbCalibrationOk) {
+        appendTransform(stream, "extrinsic", rgbCalibration.extrinsic);
+        appendPdm(stream, "intrinsic1080", rgbCalibration.intrinsic1080);
+        appendPdm(stream, "intrinsic720", rgbCalibration.intrinsic720);
+        appendPdm(stream, "intrinsic480", rgbCalibration.intrinsic480);
+    }
+    stream << "\n";
+
+    stream << "[STEREO_FISHEYES_PDM] " << (stereoFisheyesPdmOk ? "SUCCESS" : "FAILED") << "\n";
+    if (stereoFisheyesPdmOk) {
+        for (int i = 0; i < 2; ++i) {
+            std::string prefix = "calibration[" + std::to_string(i) + "]";
+            appendTransform(stream, (prefix + ".extrinsic").c_str(), stereoFisheyesPdmCalibration.calibrations[i].extrinsic);
+            appendPdm(stream, (prefix + ".intrinsic").c_str(), stereoFisheyesPdmCalibration.calibrations[i].intrinsic);
+        }
+    }
+    stream << "\n";
+
+    stream << "[STEREO_DISPLAY] " << (stereoDisplayOk ? "SUCCESS" : "FAILED") << "\n";
+    if (stereoDisplayOk) {
+        for (int i = 0; i < 2; ++i) {
+            std::string prefix = "calibration[" + std::to_string(i) + "]";
+            appendTransform(stream, (prefix + ".extrinsic").c_str(), stereoDisplayCalibration.calibrations[i].extrinsic);
+            appendPdm(stream, (prefix + ".intrinsic").c_str(), stereoDisplayCalibration.calibrations[i].intrinsic);
+        }
+    }
+    return stream.str();
+}
+
+static std::string saveCalibrationReportToPath(const std::string &directoryPath) {
+    if (directoryPath.empty()) {
+        return "ERROR: save directory is empty";
+    }
+    if (!device) {
+        return "ERROR: device unavailable";
+    }
+
+    char snBuffer[256] = {0};
+    UnityWrapper::xv_get_sn(snBuffer, sizeof(snBuffer));
+    std::string serialNumber = sanitizeFileName(snBuffer);
+    std::string filePath = directoryPath + "/" + serialNumber + ".txt";
+
+    std::ofstream output(filePath, std::ios::out | std::ios::trunc);
+    if (!output.is_open()) {
+        return "ERROR: failed to open file " + filePath;
+    }
+    output << buildCalibrationReport();
+    output.close();
+    return filePath;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_xvisio_xvsdk_XCamera_nSaveCalibrationReport(JNIEnv *env, jclass clazz, jstring directoryPath_) {
+    const char *directoryChars = directoryPath_ ? env->GetStringUTFChars(directoryPath_, nullptr) : nullptr;
+    std::string directoryPath = directoryChars ? directoryChars : "";
+    if (directoryChars) {
+        env->ReleaseStringUTFChars(directoryPath_, directoryChars);
+    }
+    std::string result = saveCalibrationReportToPath(directoryPath);
+    return env->NewStringUTF(result.c_str());
+}
+
 void testXvWrapper(){
 //    XvWrapper::setXvDevice(device);
     XvWrapper::initXvDevice();
@@ -1097,7 +1382,7 @@ Java_org_xvisio_xvsdk_XCamera_nSetTofSolution(JNIEnv *env, jclass type, jint mod
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_org_xvisio_xvsdk_XCamera_nSetElectrochromicLevel(JNIEnv *env, jclass type, jint level) {
-    return XvWrapper::xv_set_electrochromic_level(level) ? JNI_TRUE : JNI_FALSE;
+    return XvWrapper::xv_set_hms_electrochromic_level(level) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1223,4 +1508,3 @@ extern "C" JNIEXPORT void JNICALL
 Java_org_xvisio_xvsdk_XCamera_nStopVsyncMonitor(JNIEnv *env, jclass clazz) {
     stopVsyncMonitor();
 }
-

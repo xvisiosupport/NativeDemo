@@ -266,7 +266,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/bg_tech_status"
                     android:gravity="center"
-                    android:text="10"
+                    android:text="4"
                     android:textColor="@color/tech_accent"
                     android:textSize="15sp"
                     android:textStyle="bold"
@@ -284,6 +284,107 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/bt_electro_auto"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_tech_button"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:text="AUTO TEST"
+                    android:textAllCaps="false"
+                    android:textColor="@color/tech_accent"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/bt_electro_stop"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_tech_button"
+                    android:enabled="false"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:text="STOP"
+                    android:textAllCaps="false"
+                    android:textColor="@color/tech_red"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_electro_auto_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_tech_status"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingTop="8dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="8dp"
+                android:text="AUTO IDLE  STEPS 0  DIR UP"
+                android:textColor="@color/tech_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/tech_divider" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▸ CPU AFFINITY TEST"
+                android:textColor="@color/tech_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/bt_cpu_affinity_test"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_tech_button"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="RUN CPU AFFINITY TEST"
+                android:textAllCaps="false"
+                android:textColor="@color/tech_accent"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_cpu_affinity_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_tech_status"
+                android:gravity="start|center_vertical"
+                android:minHeight="72dp"
+                android:paddingLeft="10dp"
+                android:paddingTop="8dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="8dp"
+                android:text="Tap run to verify whether this box supports CPU affinity."
+                android:textColor="@color/tech_text_secondary"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
 
             <!-- Divider line inside panel -->
             <View
@@ -479,6 +580,88 @@
                 android:textColor="@color/tech_text_hint"
                 android:textSize="11sp"
                 android:fontFamily="monospace" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/tech_divider" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CALIBRATION"
+                android:textColor="@color/tech_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/bt_save_calib"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_tech_button_accent"
+                android:minHeight="0dp"
+                android:text="SAVE CALIB"
+                android:textColor="@color/tech_accent"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_calib_path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_tech_status"
+                android:paddingLeft="10dp"
+                android:paddingTop="7dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="7dp"
+                android:text="PATH: --"
+                android:textColor="@color/tech_text_hint"
+                android:textSize="11sp"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="CALIBRATION REPORT"
+                android:textColor="@color/tech_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/ll_calib_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_tech_status"
+                android:orientation="vertical"
+                android:paddingLeft="8dp"
+                android:paddingTop="8dp"
+                android:paddingRight="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tv_calib_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="10dp"
+                    android:text="No report loaded"
+                    android:textColor="@color/tech_text_hint"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace" />
+
+                <LinearLayout
+                    android:id="@+id/ll_calib_sections"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- ═══ Camera Stream Selection ═══ -->

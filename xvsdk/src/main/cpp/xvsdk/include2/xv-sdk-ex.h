@@ -401,7 +401,7 @@ public:
      * @param refreshRate : the refresh rate used for the detection (in Hz)
      * @return Id of the started detector.
      */
-    static std::string startTagDetector(std::shared_ptr<xv::FisheyeCameras>, std::shared_ptr<Slam> slam, std::string const& tagFamily, double size, double refreshRate);
+    static std::string startTagDetector(std::shared_ptr<xv::FisheyeCameras>, std::shared_ptr<Slam> slam, std::string const& tagFamily, double size, double refreshRate, float quadDecimate=1.);
     /**
      * @brief Start a tag detectors
      * @param slam : SLAM to use for localisation of the tag. The detected tags will be in world frame coordinates as defined by the SLAM.
@@ -410,7 +410,7 @@ public:
      * @param refreshRate : the refresh rate used for the detection (in Hz)
      * @return Id of the started detector.
      */
-    static std::string startTagDetector(std::shared_ptr<xv::ColorCamera>, std::shared_ptr<Slam> slam, std::string const& tagFamily, double size, double refreshRate);
+    static std::string startTagDetector(std::shared_ptr<xv::ColorCamera>, std::shared_ptr<Slam> slam, std::string const& tagFamily, double size, double refreshRate, float quadDecimate=1.);
 
     /**
      * @brief Stop a tag detector.
@@ -538,7 +538,7 @@ public:
      * @param c multi camera calibration
      * @param f name of the AprilTag family to use (support: "36h11" "25h9" "16h5" and "14h12")
      */
-    explicit AprilTagDetector(std::vector<xv::CalibrationEx> const& c, std::string const& f="36h11", bool subpixelic=false);
+    explicit AprilTagDetector(std::vector<xv::CalibrationEx> const& c, std::string const& f="36h11", bool subpixelic=false, float quadDecimate=1.);
 
     /**
      * @brief Construct an AprilTag detector on single view
@@ -546,7 +546,7 @@ public:
      * @param camerPose camera pose
      * @param f name of the AprilTag family to use (support: "36h11" "25h9" "16h5" and "14h12")
      */
-    explicit AprilTagDetector(xv::PolynomialDistortionCameraModel const& c, xv::Transform const& camerPose, std::string const& f="36h11", bool subpixelic=false);
+    explicit AprilTagDetector(xv::PolynomialDistortionCameraModel const& c, xv::Transform const& camerPose, std::string const& f="36h11", bool subpixelic=false, float quadDecimate=1.);
 
     /**
      * @brief Construct an AprilTag detector on single view
@@ -554,7 +554,7 @@ public:
      * @param camerPose camera pose
      * @param f name of the AprilTag family to use (support: "36h11" "25h9" "16h5" and "14h12")
      */
-    explicit AprilTagDetector(xv::UnifiedCameraModel const& c, xv::Transform const& camerPose, std::string const& f="36h11", bool subpixelic=false);
+    explicit AprilTagDetector(xv::UnifiedCameraModel const& c, xv::Transform const& camerPose, std::string const& f="36h11", bool subpixelic=false, float quadDecimate=1.);
 
     /**
      * @brief Construct an AprilTag detector on single view
@@ -562,14 +562,14 @@ public:
      * @param camerPose camera pose
      * @param f name of the AprilTag family to use (support: "36h11" "25h9" "16h5" and "14h12")
      */
-    explicit AprilTagDetector(xv::SpecialUnifiedCameraModel const& c, xv::Transform const& camerPose, std::string const& f="36h11", bool subpixelic=false);
+    explicit AprilTagDetector(xv::SpecialUnifiedCameraModel const& c, xv::Transform const& camerPose, std::string const& f="36h11", bool subpixelic=false, float quadDecimate=1.);
 
     /**
      * @brief Construct an AprilTag detector without camera calibration (only 2D detections are available)
      * @param c multi camera calibration
      * @param f name of the AprilTag family to use (support: "36h11" "25h9" "16h5" and "14h12")
      */
-    explicit AprilTagDetector(std::string const& f="36h11", bool subpixelic=false);
+    explicit AprilTagDetector(std::string const& f="36h11", bool subpixelic=false, float quadDecimate=1.);
 
     /**
      * @brief Detect AprilTags in Fisheye Images and return the poses of the tags
@@ -619,6 +619,9 @@ private:
 
 class ColorCameraEx : public ColorCamera, public std::enable_shared_from_this<ColorCameraEx> {
 
+
+    float m_quadDecimate = 1.;
+
 public:
     std::shared_ptr<ColorCameraEx> getThis();
 
@@ -652,6 +655,15 @@ public:
      * @return the QR code text encoded in the TagDetection with id
      */
     std::string getCode(std::string const& detectorId, int id) const;
+
+    /**
+     * @brief Set quad decimation for the detection
+     *
+     * @param quadDecimate default value is 1. (no decimate), value needs to be > 1.
+     */
+    void setQuadDecimate(float quadDecimate);
+
+    virtual const std::vector<CalibrationEx>& calibrationEx() = 0;
 };
 
 /**
@@ -663,6 +675,7 @@ class FisheyeCamerasEx : public FisheyeCameras, public std::enable_shared_from_t
     std::mutex m_tagDetectorsMtx;
     std::unordered_map<std::string, std::shared_ptr<TagDetector>> m_tagDetectors;
     std::shared_ptr<TagDetector> getDetector(std::string const& tagFamily);
+    float m_quadDecimate = 1.;
 
     std::mutex m_lastFisheyeImageMtx;
     xv::FisheyeImages m_lastFisheyeImage;
@@ -761,6 +774,13 @@ public:
      * @return the QR code text encoded in the TagDetection with id
      */
     std::string getCode(std::string const& detectorId, int id) const;
+
+    /**
+     * @brief Set quad decimation for the detection
+     *
+     * @param quadDecimate default value is 1. (no decimate), value needs to be > 1.
+     */
+    void setQuadDecimate(float quadDecimate);
 
     virtual DeviceEx::StereoInputType externalStereoInputType() const = 0;
     virtual bool getAecParameters(IspAecSetting& params) = 0;

@@ -168,16 +168,24 @@ public class XCamera extends XVisioClass {
             }
         });
     }
-    public synchronized void testFuncs() {
-        nTestFuncs();
+    public synchronized String testFuncs() {
+        return nTestFuncs();
+    }
+
+    public synchronized String saveCalibrationReport(String directoryPath) {
+        return nSaveCalibrationReport(directoryPath);
     }
 
     public synchronized void setSlamMode(int mode) {
         nSetSlamMode(mode);
     }
 
-    public synchronized boolean setElectrochromicLevel(int level) {
+    public synchronized boolean setHmsElectrochromicLevel(int level) {
         return nSetElectrochromicLevel(level);
+    }
+
+    public synchronized boolean setElectrochromicLevel(int level) {
+        return setHmsElectrochromicLevel(level);
     }
 
     public synchronized boolean startVsyncMonitor() {
@@ -250,7 +258,8 @@ public class XCamera extends XVisioClass {
 
     private static native void nSetRgbSolution(int mode);
     private static native void nSetTofSolution(int mode);
-    private static native void nTestFuncs();
+    private static native String nTestFuncs();
+    private static native String nSaveCalibrationReport(String directoryPath);
 
     private static native void nSetSlamMode(int mode);
     private static native boolean nSetElectrochromicLevel(int level);
